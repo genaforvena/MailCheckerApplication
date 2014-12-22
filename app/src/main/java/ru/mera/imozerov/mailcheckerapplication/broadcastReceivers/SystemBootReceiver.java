@@ -1,4 +1,4 @@
-package ru.mera.imozerov.mailcheckerapplication.broadcastRecievers;
+package ru.mera.imozerov.mailcheckerapplication.broadcastReceivers;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -8,10 +8,10 @@ import android.util.Log;
 import ru.mera.imozerov.mailcheckerapplication.BuildConfig;
 import ru.mera.imozerov.mailcheckerapplication.services.MailCheckerService;
 
-public class SystemBootReciever extends BroadcastReceiver {
-    private static final String TAG = SystemBootReciever.class.getName();
+public class SystemBootReceiver extends BroadcastReceiver {
+    private static final String TAG = SystemBootReceiver.class.getName();
 
-    public SystemBootReciever() {
+    public SystemBootReceiver() {
     }
 
     @Override
@@ -19,7 +19,7 @@ public class SystemBootReciever extends BroadcastReceiver {
         if (BuildConfig.DEBUG) {
             Log.v(TAG, "Boot recieved. Starting service");
         }
-        Intent myIntent = new Intent(context, MailCheckerService.class);
+        Intent myIntent = new Intent(MailCheckerService.class.getName());
         context.startService(myIntent);
     }
 }

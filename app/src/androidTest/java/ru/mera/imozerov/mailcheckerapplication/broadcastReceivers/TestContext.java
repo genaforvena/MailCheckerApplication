@@ -1,4 +1,4 @@
-package ru.mera.imozerov.mailcheckerapplication.broadcastRecievers;
+package ru.mera.imozerov.mailcheckerapplication.broadcastReceivers;
 
 import android.content.ComponentName;
 import android.content.Intent;
