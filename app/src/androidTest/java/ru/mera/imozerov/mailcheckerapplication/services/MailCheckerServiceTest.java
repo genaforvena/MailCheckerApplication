@@ -24,9 +24,13 @@ public class MailCheckerServiceTest extends ServiceTestCase {
         mMailCheckerService = new MailCheckerService();
     }
 
-    public void testOnCreate_timerIsOn() {
-        mMailCheckerService.onCreate();
-        assertNotNull(mMailCheckerService.getTimer());
+    public void testPreconditions() {
+        assertNotNull(mMailCheckerService);
+    }
+
+    public void testStartable() {
+        Intent intent = new Intent(MailCheckerService.class.getName());
+        startService(intent);
     }
 
     public void testOnBind_returnsNull_ifNotLoggedInAndNotAttempting() {

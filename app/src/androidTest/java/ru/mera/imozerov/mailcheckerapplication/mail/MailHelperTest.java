@@ -48,6 +48,10 @@ public class MailHelperTest extends InstrumentationTestCase {
         };
     }
 
+    public void testPreconditions() {
+        assertNotNull(mMailHelper);
+    }
+
     public void testGetEmailsFromInbox() {
         List<Email> result = mMailHelper.getEmailsFromInbox();
         assertNotNull(result);

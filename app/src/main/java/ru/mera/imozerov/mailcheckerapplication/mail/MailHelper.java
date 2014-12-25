@@ -42,6 +42,16 @@ public class MailHelper {
         this.mUserAccount = userAccount;
     }
 
+    public boolean isAbleToLogin() {
+        try {
+            Store store = getStore();
+            return true;
+        } catch (MessagingException e) {
+            Log.w(TAG, "Unable to getStore for user " + mUserAccount, e);
+            return false;
+        }
+    }
+
     public List<Email> getEmailsFromInbox() {
         List<Email> emailListResult = new ArrayList<Email>();
 
@@ -79,7 +89,7 @@ public class MailHelper {
     Store getStore() throws MessagingException {
         Session session = Session.getInstance(mProps, null);
         Store store = session.getStore();
-        store.connect("imap.gmail.com", mUserAccount.getLogin(), mUserAccount.getPassword());
+        store.connect("imap.gmail.com", mUserAccount.getEmailAddress(), mUserAccount.getPassword());
         return store;
     }
 }

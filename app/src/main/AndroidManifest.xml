@@ -2,39 +2,46 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ru.mera.imozerov.mailcheckerapplication" >
 
+    <uses-sdk android:minSdkVersion="3" />
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <uses-library android:name="android.test.runner"/>
+
     <application
+        android:name=".MailCheckerApplication"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".activities.MainActivity"
+            android:name=".activities.LoginActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <receiver android:name=".broadcastReceivers.SystemBootReceiver" android:enabled="true" android:exported="false">
+        <receiver
+            android:name=".broadcastReceivers.SystemBootReceiver"
+            android:enabled="true"
+            android:exported="false" >
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 
         <service
             android:name=".services.MailCheckerService"
-            android:process=":remote"
             android:enabled="true"
-            android:exported="true" >
+            android:exported="true"
+            android:process=":remote" >
             <intent-filter>
-                <action
-                    android:name="ru.mera.imozerov.mailcheckerapplication.services.MailCheckerService" />
+                <action android:name="ru.mera.imozerov.mailcheckerapplication.services.MailCheckerService" />
             </intent-filter>
         </service>
     </application>
 
-    <uses-sdk android:minSdkVersion="3" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 </manifest>

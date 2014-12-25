@@ -15,21 +15,19 @@ import ru.mera.imozerov.mailcheckerapplication.BuildConfig;
 import ru.mera.imozerov.mailcheckerapplication.MailCheckerApi;
 import ru.mera.imozerov.mailcheckerapplication.NewMailListener;
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
-import ru.mera.imozerov.mailcheckerapplication.mail.MailHelper;
+import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferencesHelper;
 
 public class MailCheckerService extends Service {
+    public static final String LOGIN = MailCheckerService.class.getName() + "attemptLogin";
+    public static final String PASSWORD = MailCheckerService.class.getName() + "password";
     private static final String TAG = MailCheckerService.class.getName();
 
-    public static final String LOGIN = MailCheckerService.class.getName() + "login";
-    public static final String PASSWORD = MailCheckerService.class.getName() + "password";
-
-    private final Object mLock = new Object();
     private List<NewMailListener> listeners = new ArrayList<NewMailListener>();
     private MailCheckerApi.Stub mMailCheckerApi = new MailCheckerApiImplementation();
-    private MailHelper mMailHelper;
-    private boolean mIsLoggedIn = false;
     private TimerTask mUpdateTask = new UpdateTask();
     private Timer mTimer;
+    private UserAccount mUserAccount;
+    private SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
 
     public MailCheckerService() {
     }
@@ -37,13 +35,8 @@ public class MailCheckerService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         if (MailCheckerService.class.getName().equals(intent.getAction())) {
-            String login = intent.getStringExtra(LOGIN);
-            String password = intent.getStringExtra(PASSWORD);
-            boolean isLoginAttempt = login != null && password != null;
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "onBind; isLoggedIn = " + isLoggedIn() + "; isLoginAttempt = " + isLoginAttempt);
-            }
-            if (isLoggedIn() || isLoginAttempt) {
+            attemptLogin(intent);
+            if (isLoggedIn()) {
                 if (BuildConfig.DEBUG) {
                     Log.d(TAG, "Bound by intent " + intent);
                 }
@@ -51,16 +44,19 @@ public class MailCheckerService extends Service {
             }
         }
         return null;
-
     }
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.i(TAG, "Creating service instance");
-
-        mTimer = new Timer("MailCheckerTimer");
-        mTimer.schedule(mUpdateTask, 1000L, 60 * 1000L);
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i(TAG, "Starting service");
+        if (isLoggedIn()) {
+            mTimer = new Timer("MailCheckerTimer");
+            mTimer.schedule(mUpdateTask, 1000L, 60 * 1000L);
+        } else {
+            Log.i(TAG, "Stopping service as no user logged in");
+            stopSelf();
+        }
+        return Service.START_NOT_STICKY;
     }
 
     @Override
@@ -69,25 +65,30 @@ public class MailCheckerService extends Service {
         Log.i(TAG, "Destroying service instance");
     }
 
-    public boolean isLoggedIn() {
-        return mIsLoggedIn;
+    private void attemptLogin(Intent intent) {
+        String login = intent.getStringExtra(LOGIN);
+        String password = intent.getStringExtra(PASSWORD);
+        mUserAccount = new UserAccount(login, password);
+        login();
     }
 
-    public void setLoggedIn(boolean mIsLoggedIn) {
-        this.mIsLoggedIn = mIsLoggedIn;
+    private void login() {
+        if (mUserAccount != null) {
+            mSharedPreferencesHelper.saveUserAccount(this, mUserAccount);
+        }
     }
 
-    public Timer getTimer() {
-        return mTimer;
+    private boolean isLoggedIn() {
+        return mSharedPreferencesHelper.getUserAccount(this) != null;
     }
 
     class MailCheckerApiImplementation extends MailCheckerApi.Stub {
 
         @Override
-        public void login(String username, String password) throws RemoteException {
-            synchronized (this) {
-                mMailHelper = new MailHelper(new UserAccount(username, password));
-                setLoggedIn(true);
+        public void login(String login, String password) throws RemoteException {
+            if (login != null && !"".equals(login.trim()) && password != null && !"".equals(password.trim())) {
+                mUserAccount = new UserAccount(login, password);
+                MailCheckerService.this.login();
             }
         }
 
@@ -98,32 +99,26 @@ public class MailCheckerService extends Service {
 
         @Override
         public void addListener(NewMailListener listener) throws RemoteException {
-            synchronized (listeners) {
-                listeners.add(listener);
-            }
+            listeners.add(listener);
         }
 
         @Override
         public void removeListener(NewMailListener listener) throws RemoteException {
-            synchronized (listeners) {
-                listeners.remove(listener);
-            }
+            listeners.remove(listener);
         }
-    };
+    }
 
     class UpdateTask extends TimerTask {
         @Override
         public void run() {
             Log.i(TAG, "Timer task doing work");
-            synchronized (listeners) {
-                for (NewMailListener listener : listeners) {
-                    try {
-                        listener.handleNewMail();
-                    } catch (RemoteException e) {
-                        Log.w(TAG, "Failed to notify listener " + listener, e);
-                    }
+            for (NewMailListener listener : listeners) {
+                try {
+                    listener.handleNewMail();
+                } catch (RemoteException e) {
+                    Log.w(TAG, "Failed to notify listener " + listener, e);
                 }
             }
         }
-    };
+    }
 }
