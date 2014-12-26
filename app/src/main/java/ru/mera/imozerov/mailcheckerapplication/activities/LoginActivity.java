@@ -33,6 +33,8 @@ public class LoginActivity extends Activity {
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    private Button mEmailSignInButton;
+    MailCheckerApplication mMailCheckerApplication;
 
     private IJobListener mListener;
 
@@ -57,7 +59,7 @@ public class LoginActivity extends Activity {
             }
         });
 
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+        mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -87,7 +89,7 @@ public class LoginActivity extends Activity {
         boolean cancel = false;
         View focusView = null;
 
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
+        if (TextUtils.isEmpty(password) || !isPasswordValid(password)) {
             mPasswordView.setError(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
@@ -146,8 +148,11 @@ public class LoginActivity extends Activity {
         protected Boolean doInBackground(Void... params) {
             mUserAccount = new UserAccount(mEmail, mPassword);
             MailHelper mailHelper = new MailHelper(mUserAccount);
-            ((MailCheckerApplication) getApplication()).setMailHelper(mailHelper);
-            return mailHelper.isAbleToLogin();
+            if (mMailCheckerApplication == null) {
+                mMailCheckerApplication = ((MailCheckerApplication) getApplication());
+            }
+            mMailCheckerApplication.setMailHelper(mailHelper);
+            return mMailCheckerApplication.getMailHelper().isAbleToLogin();
         }
 
         @Override

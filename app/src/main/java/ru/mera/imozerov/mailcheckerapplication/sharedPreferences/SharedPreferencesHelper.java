@@ -15,6 +15,10 @@ public class SharedPreferencesHelper {
     public static final String PREFS_LOGIN_USERNAME_KEY = "__USERNAME__" ;
     public static final String PREFS_LOGIN_PASSWORD_KEY = "__PASSWORD__" ;
 
+    public boolean isLoggedIn(Context context) {
+        return getUserAccount(context) != null;
+    }
+
     public UserAccount getUserAccount(Context context) {
         String login = getFromPrefs(context, PREFS_LOGIN_USERNAME_KEY, null);
         String password = getFromPrefs(context, PREFS_LOGIN_PASSWORD_KEY, null);

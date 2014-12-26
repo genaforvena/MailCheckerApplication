@@ -14,23 +14,24 @@ import java.util.TimerTask;
 import ru.mera.imozerov.mailcheckerapplication.BuildConfig;
 import ru.mera.imozerov.mailcheckerapplication.MailCheckerApi;
 import ru.mera.imozerov.mailcheckerapplication.NewMailListener;
+import ru.mera.imozerov.mailcheckerapplication.dto.Email;
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
+import ru.mera.imozerov.mailcheckerapplication.mail.MailHelper;
 import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferencesHelper;
 
 public class MailCheckerService extends Service {
-    public static final String LOGIN = MailCheckerService.class.getName() + "attemptLogin";
-    public static final String PASSWORD = MailCheckerService.class.getName() + "password";
     private static final String TAG = MailCheckerService.class.getName();
 
-    private List<NewMailListener> listeners = new ArrayList<NewMailListener>();
+    public static final String LOGIN = MailCheckerService.class.getName() + "attemptLogin";
+    public static final String PASSWORD = MailCheckerService.class.getName() + "password";
+
+    private List<NewMailListener> listeners = new ArrayList<>();
     private MailCheckerApi.Stub mMailCheckerApi = new MailCheckerApiImplementation();
     private TimerTask mUpdateTask = new UpdateTask();
     private Timer mTimer;
     private UserAccount mUserAccount;
     private SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
-
-    public MailCheckerService() {
-    }
+    protected MailHelper mMailHelper;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -50,60 +51,65 @@ public class MailCheckerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "Starting service");
         if (isLoggedIn()) {
-            mTimer = new Timer("MailCheckerTimer");
-            mTimer.schedule(mUpdateTask, 1000L, 60 * 1000L);
+            scheduleTask();
         } else {
-            Log.i(TAG, "Stopping service as no user logged in");
+            Log.i(TAG, "Stopping service as user is not logged in");
             stopSelf();
         }
         return Service.START_NOT_STICKY;
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.i(TAG, "Destroying service instance");
     }
 
     private void attemptLogin(Intent intent) {
         String login = intent.getStringExtra(LOGIN);
         String password = intent.getStringExtra(PASSWORD);
         mUserAccount = new UserAccount(login, password);
-        login();
+        if (mUserAccount != null) {
+            setMailHelper(new MailHelper(mUserAccount));
+            if (mMailHelper.isAbleToLogin()) {
+                mSharedPreferencesHelper.saveUserAccount(this, mUserAccount);
+                scheduleTask();
+            }
+        }
     }
 
-    private void login() {
-        if (mUserAccount != null) {
-            mSharedPreferencesHelper.saveUserAccount(this, mUserAccount);
-        }
+    private void scheduleTask() {
+        mTimer = new Timer("MailCheckerTimer");
+        mTimer.schedule(mUpdateTask, 1000L, 60 * 1000L);
     }
 
     private boolean isLoggedIn() {
-        return mSharedPreferencesHelper.getUserAccount(this) != null;
+        return mSharedPreferencesHelper.isLoggedIn(this);
+    }
+
+    TimerTask getUpdateTask() {
+        return mUpdateTask;
+    }
+
+    Timer getTimer() {
+        return mTimer;
+    }
+
+    void setSharedPreferencesHelper(SharedPreferencesHelper mSharedPreferencesHelper) {
+        this.mSharedPreferencesHelper = mSharedPreferencesHelper;
+    }
+
+    void setMailHelper(MailHelper mMailHelper) {
+        this.mMailHelper = mMailHelper;
     }
 
     class MailCheckerApiImplementation extends MailCheckerApi.Stub {
-
-        @Override
-        public void login(String login, String password) throws RemoteException {
-            if (login != null && !"".equals(login.trim()) && password != null && !"".equals(password.trim())) {
-                mUserAccount = new UserAccount(login, password);
-                MailCheckerService.this.login();
-            }
-        }
-
         @Override
         public boolean isLoggedIn() throws RemoteException {
-            return isLoggedIn();
+            return MailCheckerService.this.isLoggedIn();
         }
 
         @Override
-        public void addListener(NewMailListener listener) throws RemoteException {
+        public void addNewMailListener(NewMailListener listener) throws RemoteException {
             listeners.add(listener);
         }
 
         @Override
-        public void removeListener(NewMailListener listener) throws RemoteException {
+        public void removeNewMailListener(NewMailListener listener) throws RemoteException {
             listeners.remove(listener);
         }
     }
@@ -112,6 +118,9 @@ public class MailCheckerService extends Service {
         @Override
         public void run() {
             Log.i(TAG, "Timer task doing work");
+            if (mMailHelper != null) {
+                List<Email> emails = mMailHelper.getEmailsFromInbox();
+            }
             for (NewMailListener listener : listeners) {
                 try {
                     listener.handleNewMail();
