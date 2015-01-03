@@ -71,11 +71,7 @@ public class LoginActivity extends Activity {
         mProgressView = findViewById(R.id.login_progress);
     }
 
-    public void setListener(IJobListener listener) {
-        this.mListener = listener;
-    }
-
-    public void attemptLogin() {
+    private void attemptLogin() {
         if (mAuthTask != null) {
             return;
         }
@@ -129,12 +125,17 @@ public class LoginActivity extends Activity {
         return password.length() > 4;
     }
 
-    public void showProgress(boolean show) {
+    // for testing purposes
+    void setListener(IJobListener listener) {
+        this.mListener = listener;
+    }
+
+    private void showProgress(boolean show) {
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
             mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
     }
 
-    public class CheckLoginTask extends AsyncTask<Void, Void, Boolean> {
+    private class CheckLoginTask extends AsyncTask<Void, Void, Boolean> {
         private final String mEmail;
         private final String mPassword;
         private UserAccount mUserAccount;
@@ -165,7 +166,7 @@ public class LoginActivity extends Activity {
                 finish();
             } else {
                 mUserAccount = null;
-                ((MailCheckerApplication) getApplication()).setMailHelper(null);
+                mMailCheckerApplication.setMailHelper(null);
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
             }

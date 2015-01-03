@@ -11,27 +11,36 @@ import javax.mail.Address;
 public class Email {
     private static final String TAG = Email.class.getName();
 
-    private List<Address> mSenders;
-    private Address mReceiver;
+    private long mId;
+    private Address mSender;
+    private List<Address> mRecipients;
     private Date mSentDate;
     private String mSubject;
-    private String mText;
+    private String mContent;
     private boolean mIsUnread;
 
-    public List<Address> getSenders() {
-        return mSenders;
+    public long getId() {
+        return mId;
     }
 
-    public void setSenders(List<Address> mSenders) {
-        this.mSenders = mSenders;
+    public void setId(long mId) {
+        this.mId = mId;
     }
 
-    public Address getReceiver() {
-        return mReceiver;
+    public Address getSenders() {
+        return mSender;
     }
 
-    public void setReceiver(Address mReceiver) {
-        this.mReceiver = mReceiver;
+    public void setSenders(Address mSender) {
+        this.mSender = mSender;
+    }
+
+    public List<Address> getRecipients() {
+        return mRecipients;
+    }
+
+    public void setRecipients(List<Address> mRecipients) {
+        this.mRecipients = mRecipients;
     }
 
     public Date getSentDate() {
@@ -50,12 +59,12 @@ public class Email {
         this.mSubject = mSubject;
     }
 
-    public String getText() {
-        return mText;
+    public String getContent() {
+        return mContent;
     }
 
-    public void setText(String mText) {
-        this.mText = mText;
+    public void setContent(String mText) {
+        this.mContent = mText;
     }
 
     public boolean isUnread() {

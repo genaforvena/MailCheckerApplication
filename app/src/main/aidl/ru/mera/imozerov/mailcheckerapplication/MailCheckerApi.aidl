@@ -4,6 +4,7 @@ import ru.mera.imozerov.mailcheckerapplication.NewMailListener;
 
 interface MailCheckerApi {
     boolean isLoggedIn();
+    void forceRefresh();
     void addNewMailListener(NewMailListener listener);
     void removeNewMailListener(NewMailListener listener);
 }

@@ -104,6 +104,10 @@ public class MailCheckerService extends Service {
         }
 
         @Override
+        public void forceRefresh() {
+
+        }
+        @Override
         public void addNewMailListener(NewMailListener listener) throws RemoteException {
             listeners.add(listener);
         }
