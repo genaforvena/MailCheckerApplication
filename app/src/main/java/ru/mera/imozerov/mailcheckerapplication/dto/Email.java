@@ -3,8 +3,6 @@ package ru.mera.imozerov.mailcheckerapplication.dto;
 import java.util.Date;
 import java.util.List;
 
-import javax.mail.Address;
-
 /**
  * Created by imozerov on 23.12.2014.
  */
@@ -12,12 +10,12 @@ public class Email {
     private static final String TAG = Email.class.getName();
 
     private long mId;
-    private Address mSender;
-    private List<Address> mRecipients;
+    private String mSenderEmail;
+    private List<String> mRecipientEmails;
     private Date mSentDate;
     private String mSubject;
     private String mContent;
-    private boolean mIsUnread;
+    private boolean mIsRead;
 
     public long getId() {
         return mId;
@@ -27,20 +25,20 @@ public class Email {
         this.mId = mId;
     }
 
-    public Address getSenders() {
-        return mSender;
+    public String getSenderEmail() {
+        return mSenderEmail;
     }
 
-    public void setSenders(Address mSender) {
-        this.mSender = mSender;
+    public void setSenderEmail(String mSender) {
+        this.mSenderEmail = mSender;
     }
 
-    public List<Address> getRecipients() {
-        return mRecipients;
+    public List<String> getRecipientEmails() {
+        return mRecipientEmails;
     }
 
-    public void setRecipients(List<Address> mRecipients) {
-        this.mRecipients = mRecipients;
+    public void setRecipientEmails(List<String> mRecipients) {
+        this.mRecipientEmails = mRecipients;
     }
 
     public Date getSentDate() {
@@ -67,11 +65,11 @@ public class Email {
         this.mContent = mText;
     }
 
-    public boolean isUnread() {
-        return mIsUnread;
+    public boolean isRead() {
+        return mIsRead;
     }
 
-    public void setUnread(boolean mIsUnread) {
-        this.mIsUnread = mIsUnread;
+    public void setRead(boolean mIsRead) {
+        this.mIsRead = mIsRead;
     }
 }

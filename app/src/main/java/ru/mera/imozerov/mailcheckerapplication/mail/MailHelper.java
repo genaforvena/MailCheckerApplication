@@ -65,7 +65,7 @@ public class MailHelper {
                 Email email = new Email();
 
                 List<Address> in = Arrays.asList(msg.getFrom());
-                email.setSenders(in);
+                email.setSenderEmail(in);
 
                 Multipart mp = (Multipart) msg.getContent();
                 BodyPart bp = mp.getBodyPart(0);
