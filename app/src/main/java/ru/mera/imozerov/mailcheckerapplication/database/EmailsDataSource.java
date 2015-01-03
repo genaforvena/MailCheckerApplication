@@ -81,9 +81,15 @@ public class EmailsDataSource {
         email.setContent(emailCursor.getString(emailCursor.getColumnIndex(EmailTable.COLUMN_NAME_CONTENT)));
         email.setSenderEmail(emailCursor.getString(emailCursor.getColumnIndex(EmailTable.COLUMN_NAME_SENDER_EMAIL)));
         email.setRead(emailCursor.getInt(emailCursor.getColumnIndex(EmailTable.COLUMN_NAME_IS_READ)) == 1 ? true : false);
+        email.setRecipientEmails(new ArrayList<String>());
 
+        Cursor recipientCursor = mDatabase.query(RecipientTable.TABLE_NAME, RecipientTable.allColumns, RecipientTable.COLUMN_NAME_EMAIL_ID + "=?", new String[] {String.valueOf(email.getId())}, null, null, null);
+        recipientCursor.moveToFirst();
+        while (!recipientCursor.isAfterLast()) {
+            email.getRecipientEmails().add(recipientCursor.getString(recipientCursor.getColumnIndex(RecipientTable.COLUMN_NAME_RECIPIENT_EMAIL)));
+        }
 
-
+        recipientCursor.close();
         return email;
     }
 }
