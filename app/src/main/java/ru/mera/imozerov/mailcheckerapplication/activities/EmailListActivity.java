@@ -9,8 +9,10 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import ru.mera.imozerov.mailcheckerapplication.BuildConfig;
@@ -28,7 +30,30 @@ public class EmailListActivity extends Activity implements NewMailListener {
 
     private ListView mEmailListView;
     private EmailListAdapter mEmailListAdapter;
-    private ServiceConnection mServiceConnection;
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.i(TAG, "Service is connected");
+            Toast.makeText(EmailListActivity.this, "Service is connected!", Toast.LENGTH_SHORT).show();
+            mMailCheckerService = (MailCheckerApi) service;
+            try {
+                mEmails = mMailCheckerService.getAllEmails();
+                mEmailListAdapter.clear();
+                mEmailListAdapter.addAll(mEmails);
+                mEmailListAdapter.notifyDataSetChanged();
+            } catch (RemoteException e) {
+                Log.e(TAG, "Unable to get all emails from service!", e);
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "Service is disconnected");
+            }
+        }
+    };
+
     private UserAccount mUserAccount;
     private MailCheckerApi mMailCheckerService;
     private List<Email> mEmails;
@@ -45,39 +70,33 @@ public class EmailListActivity extends Activity implements NewMailListener {
             startActivity(new Intent(this, LoginActivity.class));
         }
 
-        mServiceConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                Log.i(TAG, "Service is connected");
-                mMailCheckerService = (MailCheckerApi) service;
-                try {
-                    mEmails = mMailCheckerService.getAllEmails();
-                    mEmailListAdapter.clear();
-                    mEmailListAdapter.addAll(mEmails);
-                    mEmailListAdapter.notifyDataSetChanged();
-                } catch (RemoteException e) {
-                    Log.e(TAG, "Unable to get all emails from service!", e);
-                }
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "Service is disconnected");
-                }
-            }
-        };
-
-        Intent intent = new Intent(this, MailCheckerService.class);
-        intent.putExtra(MailCheckerService.LOGIN, mUserAccount.getEmailAddress());
-        intent.putExtra(MailCheckerService.PASSWORD, mUserAccount.getPassword());
-        bindService(intent, mServiceConnection, 0);
-
         mEmails = new ArrayList<>();
+        Email dummyEmail = new Email();
+        dummyEmail.setSubject("Subject");
+        dummyEmail.setSenderEmail("Sender");
+        dummyEmail.setSentDate(new Date());
+        mEmails.add(dummyEmail);
+        mEmails.add(dummyEmail);
+        mEmails.add(dummyEmail);
 
         mEmailListView = (ListView) findViewById(R.id.email_list_view);
         mEmailListAdapter = new EmailListAdapter(this, R.layout.email_row, mEmails);
         mEmailListView.setAdapter(mEmailListAdapter);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Intent intent = new Intent(this, MailCheckerService.class);
+        intent.putExtra(MailCheckerService.LOGIN, mUserAccount.getEmailAddress());
+        intent.putExtra(MailCheckerService.PASSWORD, mUserAccount.getPassword());
+        bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unbindService(mServiceConnection);
     }
 
     @Override
@@ -90,11 +109,5 @@ public class EmailListActivity extends Activity implements NewMailListener {
     @Override
     public IBinder asBinder() {
         return null;
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unbindService(mServiceConnection);
     }
 }

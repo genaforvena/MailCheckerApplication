@@ -43,7 +43,7 @@ public class MailHelper {
 
     public boolean isAbleToLogin() {
         try {
-            Store store = getStore();
+            getStore();
             return true;
         } catch (MessagingException e) {
             Log.w(TAG, "Unable to getStore for user " + mUserAccount, e);
@@ -52,7 +52,7 @@ public class MailHelper {
     }
 
     public List<Email> getEmailsFromInbox() {
-        List<Email> emailListResult = new ArrayList<Email>();
+        List<Email> emailListResult = new ArrayList<>();
 
         try {
             Store store = getStore();
