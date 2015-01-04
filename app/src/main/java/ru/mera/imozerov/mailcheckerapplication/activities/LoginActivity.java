@@ -1,6 +1,7 @@
 package ru.mera.imozerov.mailcheckerapplication.activities;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -164,6 +165,7 @@ public class LoginActivity extends Activity {
             if (success) {
                 mSharedPreferencesHelper.saveUserAccount(LoginActivity.this, mUserAccount);
                 finish();
+                startActivity(new Intent(LoginActivity.this, EmailListActivity.class));
             } else {
                 mUserAccount = null;
                 mMailCheckerApplication.setMailHelper(null);

@@ -14,6 +14,7 @@ import java.util.TimerTask;
 import ru.mera.imozerov.mailcheckerapplication.BuildConfig;
 import ru.mera.imozerov.mailcheckerapplication.MailCheckerApi;
 import ru.mera.imozerov.mailcheckerapplication.NewMailListener;
+import ru.mera.imozerov.mailcheckerapplication.database.EmailsDataSource;
 import ru.mera.imozerov.mailcheckerapplication.dto.Email;
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
 import ru.mera.imozerov.mailcheckerapplication.mail.MailHelper;
@@ -32,6 +33,7 @@ public class MailCheckerService extends Service {
     private UserAccount mUserAccount;
     private SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
     protected MailHelper mMailHelper;
+    private EmailsDataSource mEmailsDataSource = new EmailsDataSource(this);
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -130,6 +132,18 @@ public class MailCheckerService extends Service {
             Log.i(TAG, "Timer task doing work");
             if (mMailHelper != null) {
                 List<Email> emails = mMailHelper.getEmailsFromInbox();
+                if (BuildConfig.DEBUG) {
+                    if (emails != null) {
+                        Log.d(TAG, "Got " + emails.size() + " emails");
+                    } else {
+                        Log.d(TAG, "Attempted to get emails. But there are no");
+                    }
+                }
+                if (emails != null) {
+                    for (Email email : emails) {
+                        mEmailsDataSource.saveEmail(email);
+                    }
+                }
             }
             for (NewMailListener listener : listeners) {
                 try {

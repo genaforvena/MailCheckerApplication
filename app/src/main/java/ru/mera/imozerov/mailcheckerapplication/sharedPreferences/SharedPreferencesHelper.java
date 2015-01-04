@@ -10,10 +10,9 @@ import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
  * Created by imozerov on 24.12.2014.
  */
 public class SharedPreferencesHelper {
+    public static final String PREFS_LOGIN_USERNAME_KEY = "__USERNAME__";
+    public static final String PREFS_LOGIN_PASSWORD_KEY = "__PASSWORD__";
     private static final String TAG = SharedPreferencesHelper.class.getName();
-
-    public static final String PREFS_LOGIN_USERNAME_KEY = "__USERNAME__" ;
-    public static final String PREFS_LOGIN_PASSWORD_KEY = "__PASSWORD__" ;
 
     public boolean isLoggedIn(Context context) {
         return getUserAccount(context) != null;
@@ -33,16 +32,28 @@ public class SharedPreferencesHelper {
         saveToPrefs(context, PREFS_LOGIN_PASSWORD_KEY, account.getPassword());
     }
 
+    public void removeUserAccount(Context context) {
+        removeFromPrefs(context, PREFS_LOGIN_PASSWORD_KEY);
+        removeFromPrefs(context, PREFS_LOGIN_USERNAME_KEY);
+    }
+
     private void saveToPrefs(Context context, String key, String value) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         final SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(key,value);
+        editor.putString(key, value);
         editor.commit();
     }
 
     private String getFromPrefs(Context context, String key, String defaultValue) {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
         return sharedPrefs.getString(key, defaultValue);
+    }
+
+    private void removeFromPrefs(Context context, String key) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.remove(key);
+        editor.commit();
     }
 }
 
