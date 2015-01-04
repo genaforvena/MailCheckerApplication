@@ -8,7 +8,7 @@ import ru.mera.imozerov.mailcheckerapplication.dto.Email;
 interface MailCheckerApi {
     boolean isLoggedIn();
     void forceRefresh();
-    List<Parselable> getAllEmails();
+    List<Email> getAllEmails();
     void addNewMailListener(NewMailListener listener);
     void removeNewMailListener(NewMailListener listener);
 }

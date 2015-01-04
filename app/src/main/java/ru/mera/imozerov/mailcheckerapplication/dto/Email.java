@@ -21,6 +21,8 @@ public class Email implements Parcelable {
     private String mContent;
     private boolean mIsRead;
 
+    public Email() {}
+
     public long getId() {
         return mId;
     }
