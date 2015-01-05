@@ -5,7 +5,6 @@ import android.util.Log;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -65,7 +64,7 @@ public class MailHelper {
                 Email email = new Email();
 
                 List<String> in = Arrays.asList(msg.getFrom().toString());
-                email.setSenderEmail(in.get(0));
+                email.setSenderEmail(in.get(0).toString());
 
                 String content;
                 Object contentObject = msg.getContent();
@@ -90,7 +89,6 @@ public class MailHelper {
             Log.e(TAG, "Unable to get content of a message!", e);
         }
 
-        Collections.reverse(emailListResult);
         return emailListResult;
     }
 

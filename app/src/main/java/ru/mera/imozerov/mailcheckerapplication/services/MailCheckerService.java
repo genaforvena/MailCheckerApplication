@@ -1,9 +1,13 @@
 package ru.mera.imozerov.mailcheckerapplication.services;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import java.sql.SQLException;
@@ -15,6 +19,7 @@ import java.util.TimerTask;
 import ru.mera.imozerov.mailcheckerapplication.BuildConfig;
 import ru.mera.imozerov.mailcheckerapplication.MailCheckerApi;
 import ru.mera.imozerov.mailcheckerapplication.NewMailListener;
+import ru.mera.imozerov.mailcheckerapplication.activities.EmailListActivity;
 import ru.mera.imozerov.mailcheckerapplication.database.EmailsDataSource;
 import ru.mera.imozerov.mailcheckerapplication.dto.Email;
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
@@ -32,6 +37,7 @@ public class MailCheckerService extends Service {
     private Timer mTimer;
     private SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
     private EmailsDataSource mEmailsDataSource = new EmailsDataSource(this);
+    private NotificationManager mNotificationManager;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -150,6 +156,7 @@ public class MailCheckerService extends Service {
                             mEmailsDataSource.saveEmail(email);
                         }
                         notifyListeners();
+                        sendNotification(emails);
                     } catch (SQLException e) {
                         e.printStackTrace();
                     } finally {
@@ -157,6 +164,37 @@ public class MailCheckerService extends Service {
                     }
                 }
             }
+        }
+    }
+
+    private void sendNotification(List<Email> emails) {
+        Log.i(TAG, "Sending notification");
+        if (emails != null) {
+            String notificationText;
+            String notificationTitle;
+            if (emails.size() == 1) {
+                Email email = emails.get(0);
+                notificationTitle = "You've got new email!";
+                notificationText = "Email from " + email.getSenderEmail();
+            } else {
+                notificationTitle = "You've got some new emails!";
+                notificationText = emails.size() + " new emails";
+            }
+            NotificationCompat.Builder builder =
+                    new NotificationCompat.Builder(this)
+                            .setSmallIcon(com.google.android.gms.R.drawable.powered_by_google_dark)
+                            .setContentTitle(notificationTitle)
+                            .setAutoCancel(true)
+                            .setContentText(notificationText);
+            int NOTIFICATION_ID = 12345;
+
+            Intent targetIntent = new Intent(this, EmailListActivity.class);
+            PendingIntent contentIntent = PendingIntent.getActivity(this, 0, targetIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            builder.setContentIntent(contentIntent);
+            if (mNotificationManager == null) {
+                mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            }
+            mNotificationManager.notify(NOTIFICATION_ID, builder.build());
         }
     }
 

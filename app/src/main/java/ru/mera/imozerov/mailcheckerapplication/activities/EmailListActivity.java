@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ru.mera.imozerov.mailcheckerapplication.MailCheckerApi;
@@ -103,19 +104,20 @@ public class EmailListActivity extends Activity {
     }
 
     private void updateListView() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    mEmails = mMailCheckerService.getAllEmails();
+        try {
+            mEmails = mMailCheckerService.getAllEmails();
+            Collections.reverse(mEmails);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
                     mEmailListAdapter.clear();
                     mEmailListAdapter.addAll(mEmails);
                     mEmailListAdapter.notifyDataSetChanged();
-                } catch (RemoteException e) {
-                    Log.w(TAG, "Unable to get all emails", e);
                 }
-            }
-        });
+            });
+        } catch (RemoteException e) {
+            Log.w(TAG, "Unable to get all emails", e);
+        }
     }
 
     private class MailCheckerServiceConnection implements ServiceConnection {
@@ -128,6 +130,8 @@ public class EmailListActivity extends Activity {
                 mMailCheckerService.addNewMailListener(mNewMailListener);
                 if (!mMailCheckerService.isLoggedIn()) {
                     mMailCheckerService.login(mUserAccount.getEmailAddress(), mUserAccount.getPassword());
+                } else {
+                    updateListView();
                 }
             } catch (RemoteException e) {
                 Log.w(TAG, "Unable to login to service!", e);
