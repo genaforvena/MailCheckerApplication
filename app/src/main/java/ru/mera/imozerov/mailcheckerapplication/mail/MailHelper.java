@@ -4,10 +4,10 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import javax.mail.Address;
 import javax.mail.BodyPart;
 import javax.mail.Folder;
 import javax.mail.Message;
@@ -63,22 +63,15 @@ public class MailHelper {
             for (Message msg : msgs) {
                 Email email = new Email();
 
-                List<String> in = Arrays.asList(msg.getFrom().toString());
-                email.setSenderEmail(in.get(0).toString());
-
-                String content;
-                Object contentObject = msg.getContent();
-                if (contentObject instanceof MimeMultipart) {
-                    BodyPart bp = ((MimeMultipart)contentObject).getBodyPart(0);
-                    content = bp.toString();
-                } else {
-                    content = contentObject.toString();
+                List<String> senders = new ArrayList<>();
+                for (Address sender : msg.getFrom()) {
+                    senders.add(sender.toString());
                 }
-
+                email.setSenderEmail(senders.get(0));
                 email.setSentDate(msg.getSentDate());
                 email.setSubject(msg.getSubject());
 
-                // TODO get actual content of message
+                String content = getContent(msg);
                 email.setContent(content);
 
                 emailListResult.add(email);
@@ -90,6 +83,34 @@ public class MailHelper {
         }
 
         return emailListResult;
+    }
+
+    private String getContent(Message msg) throws IOException, MessagingException {
+        String content = null;
+        Object contentObject = msg.getContent();
+        if (contentObject instanceof MimeMultipart) {
+            MimeMultipart multipart = (MimeMultipart) contentObject;
+            for (int j = 0; j < multipart.getCount(); j++) {
+
+                BodyPart bodyPart = multipart.getBodyPart(j);
+
+                String disposition = bodyPart.getDisposition();
+
+                if (disposition != null && (disposition.equalsIgnoreCase("ATTACHMENT"))) {
+                    //Skip this is attachment
+                } else {
+                    content = bodyPart.getContent().toString();
+                    break;
+                }
+            }
+        } else {
+            content = contentObject.toString();
+        }
+
+        if (content == null) {
+            content = "Attachment only message";
+        }
+        return content;
     }
 
     Store getStore() throws MessagingException {

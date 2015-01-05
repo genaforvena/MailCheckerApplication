@@ -6,5 +6,9 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_email_list">EmailListActivity</string>
     <string name="action_logout">Logout</string>
+    <string name="title_activity_email_view">EmailViewActivity</string>
+    <string name="email_view_subject_title">Subject:</string>
+    <string name="email_view_sent_time_title">Sent date:</string>
+    <string name="email_view_sender_title">Sender:</string>
 
 </resources>

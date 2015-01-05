@@ -11,6 +11,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferenc
 
 public class EmailListActivity extends Activity {
     private static final String TAG = EmailListActivity.class.getName();
+    public static final String EVENT = EmailListActivity.class.getName() + "Email";
 
     private ListView mEmailListView;
     private EmailListAdapter mEmailListAdapter;
@@ -59,6 +62,15 @@ public class EmailListActivity extends Activity {
         mEmailListView = (ListView) findViewById(R.id.email_list_view);
         mEmailListAdapter = new EmailListAdapter(this, R.layout.email_row, mEmails);
         mEmailListView.setAdapter(mEmailListAdapter);
+        mEmailListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Email email = mEmails.get(position);
+                Intent intent = new Intent(EmailListActivity.this, EmailViewActivity.class);
+                intent.putExtra(EVENT, email);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -152,6 +164,4 @@ public class EmailListActivity extends Activity {
             updateListView();
         }
     }
-
-    ;
 }

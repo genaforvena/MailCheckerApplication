@@ -10,7 +10,7 @@
     <uses-library android:name="android.test.runner" />
 
     <application
-        android:name=".MailCheckerApplication"
+        android:name="MailCheckerApplication"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
@@ -34,7 +34,6 @@
             android:enabled="true"
             android:exported="true"
             android:process=":remote" >
-
             <intent-filter>
                 <action android:name="ru.mera.imozerov.mailcheckerapplication.services.MailCheckerService" />
             </intent-filter>
@@ -45,8 +44,15 @@
             android:label="@string/title_activity_email_list" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".activities.EmailViewActivity"
+            android:label="@string/title_activity_email_view"
+            android:parentActivityName=".activities.EmailListActivity">
+
         </activity>
     </application>
 

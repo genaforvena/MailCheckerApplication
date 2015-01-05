@@ -19,6 +19,7 @@ import java.util.TimerTask;
 import ru.mera.imozerov.mailcheckerapplication.BuildConfig;
 import ru.mera.imozerov.mailcheckerapplication.MailCheckerApi;
 import ru.mera.imozerov.mailcheckerapplication.NewMailListener;
+import ru.mera.imozerov.mailcheckerapplication.R;
 import ru.mera.imozerov.mailcheckerapplication.activities.EmailListActivity;
 import ru.mera.imozerov.mailcheckerapplication.database.EmailsDataSource;
 import ru.mera.imozerov.mailcheckerapplication.dto.Email;
@@ -182,7 +183,7 @@ public class MailCheckerService extends Service {
             }
             NotificationCompat.Builder builder =
                     new NotificationCompat.Builder(this)
-                            .setSmallIcon(com.google.android.gms.R.drawable.powered_by_google_dark)
+                            .setSmallIcon(R.drawable.ic_launcher)
                             .setContentTitle(notificationTitle)
                             .setAutoCancel(true)
                             .setContentText(notificationText);
