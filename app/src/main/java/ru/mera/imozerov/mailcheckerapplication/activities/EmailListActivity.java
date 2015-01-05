@@ -25,18 +25,29 @@ import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
 import ru.mera.imozerov.mailcheckerapplication.services.MailCheckerService;
 import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferencesHelper;
 
-public class EmailListActivity extends Activity implements NewMailListener {
+public class EmailListActivity extends Activity {
     private static final String TAG = EmailListActivity.class.getName();
 
     private ListView mEmailListView;
     private EmailListAdapter mEmailListAdapter;
+    private boolean mIsBound;
+    private UserAccount mUserAccount;
+    private MailCheckerApi mMailCheckerService;
+    private NewMailListener.Stub mNewMailListener = new NewMailListener.Stub() {
+        @Override
+        public void handleNewMail() throws RemoteException {
+            updateListView();
+        }
+    };
+
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.i(TAG, "Service is connected");
+            mIsBound = true;
             mMailCheckerService = MailCheckerApi.Stub.asInterface(service);
             try {
-                mMailCheckerService.addNewMailListener(EmailListActivity.this);
+                mMailCheckerService.addNewMailListener(mNewMailListener);
                 if (!mMailCheckerService.isLoggedIn()) {
                     mMailCheckerService.login(mUserAccount.getEmailAddress(), mUserAccount.getPassword());
                 }
@@ -48,12 +59,10 @@ public class EmailListActivity extends Activity implements NewMailListener {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             Log.i(TAG, "Service is disconnected");
+            mIsBound = false;
             mMailCheckerService = null;
         }
     };
-
-    private UserAccount mUserAccount;
-    private MailCheckerApi mMailCheckerService;
     private List<Email> mEmails;
 
 
@@ -73,21 +82,20 @@ public class EmailListActivity extends Activity implements NewMailListener {
         mEmailListView = (ListView) findViewById(R.id.email_list_view);
         mEmailListAdapter = new EmailListAdapter(this, R.layout.email_row, mEmails);
         mEmailListView.setAdapter(mEmailListAdapter);
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
         Intent intent = new Intent(this, MailCheckerService.class);
-        intent.putExtra(MailCheckerService.LOGIN, mUserAccount.getEmailAddress());
-        intent.putExtra(MailCheckerService.PASSWORD, mUserAccount.getPassword());
         bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        unbindService(mServiceConnection);
+    protected void onDestroy() {
+        super.onDestroy();
+        try {
+            mMailCheckerService.removeNewMailListener(mNewMailListener);
+            unbindService(mServiceConnection);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Unable to remove new mail listener", e);
+        }
     }
 
     @Override
@@ -110,27 +118,23 @@ public class EmailListActivity extends Activity implements NewMailListener {
 
     private void logout() {
         new SharedPreferencesHelper().removeUserAccount(this);
-        if (mMailCheckerService != null) {
+        if (mIsBound) {
             try {
-                mMailCheckerService.removeNewMailListener(this);
+                mMailCheckerService.removeNewMailListener(mNewMailListener);
             } catch (RemoteException e) {
                 Log.e(TAG, "Unable to remove this as new email listener!", e);
             }
         }
-        unbindService(mServiceConnection);
     }
 
-    @Override
-    public void handleNewMail() throws RemoteException {
-        Log.i(TAG, "New email arrived!");
-        mEmails = mMailCheckerService.getAllEmails();
-        mEmailListAdapter.clear();
-        mEmailListAdapter.addAll(mEmails);
-        mEmailListAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public IBinder asBinder() {
-        return null;
+    private void updateListView() {
+        try {
+            mEmails = mMailCheckerService.getAllEmails();
+            mEmailListAdapter.clear();
+            mEmailListAdapter.addAll(mEmails);
+            mEmailListAdapter.notifyDataSetChanged();
+        } catch (RemoteException e) {
+            Log.e(TAG, "Unable to get all emails", e);
+        }
     }
 }

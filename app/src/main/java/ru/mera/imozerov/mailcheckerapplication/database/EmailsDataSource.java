@@ -49,12 +49,13 @@ public class EmailsDataSource {
 
         long emailId = mDatabase.insert(EmailTable.TABLE_NAME, null, values);
 
-        for (String recipientEmail : email.getRecipientEmails()) {
-            ContentValues recipientsValues = new ContentValues();
-            recipientsValues.put(RecipientTable.COLUMN_NAME_EMAIL_ID, emailId);
-            recipientsValues.put(RecipientTable.COLUMN_NAME_RECIPIENT_EMAIL, recipientEmail);
-            mDatabase.insert(RecipientTable.TABLE_NAME, null, recipientsValues);
-        }
+        // TODO Skip recipients just for now. fix this
+//        for (String recipientEmail : email.getRecipientEmails()) {
+//            ContentValues recipientsValues = new ContentValues();
+//            recipientsValues.put(RecipientTable.COLUMN_NAME_EMAIL_ID, emailId);
+//            recipientsValues.put(RecipientTable.COLUMN_NAME_RECIPIENT_EMAIL, recipientEmail);
+//            mDatabase.insert(RecipientTable.TABLE_NAME, null, recipientsValues);
+//        }
     }
 
     public List<Email> getAllEmails() {
@@ -83,13 +84,12 @@ public class EmailsDataSource {
         email.setRead(emailCursor.getInt(emailCursor.getColumnIndex(EmailTable.COLUMN_NAME_IS_READ)) == 1 ? true : false);
         email.setRecipientEmails(new ArrayList<String>());
 
-        Cursor recipientCursor = mDatabase.query(RecipientTable.TABLE_NAME, RecipientTable.allColumns, RecipientTable.COLUMN_NAME_EMAIL_ID + "=?", new String[] {String.valueOf(email.getId())}, null, null, null);
-        recipientCursor.moveToFirst();
-        while (!recipientCursor.isAfterLast()) {
-            email.getRecipientEmails().add(recipientCursor.getString(recipientCursor.getColumnIndex(RecipientTable.COLUMN_NAME_RECIPIENT_EMAIL)));
-        }
-
-        recipientCursor.close();
+//        Cursor recipientCursor = mDatabase.query(RecipientTable.TABLE_NAME, RecipientTable.allColumns, RecipientTable.COLUMN_NAME_EMAIL_ID + "=?", new String[] {String.valueOf(email.getId())}, null, null, null);
+//        recipientCursor.moveToFirst();
+//        while (!recipientCursor.isAfterLast()) {
+//            email.getRecipientEmails().add(recipientCursor.getString(recipientCursor.getColumnIndex(RecipientTable.COLUMN_NAME_RECIPIENT_EMAIL)));
+//        }
+//        recipientCursor.close();
         return email;
     }
 }

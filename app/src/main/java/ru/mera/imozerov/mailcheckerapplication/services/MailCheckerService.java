@@ -110,6 +110,7 @@ public class MailCheckerService extends Service {
                     e.printStackTrace();
                     return null;
                 } finally {
+                    notifyListeners();
                     mEmailsDataSource.close();
                 }
             }
@@ -156,12 +157,16 @@ public class MailCheckerService extends Service {
                     }
                 }
             }
-            for (NewMailListener listener : listeners) {
-                try {
-                    listener.handleNewMail();
-                } catch (RemoteException e) {
-                    Log.w(TAG, "Failed to notify listener " + listener, e);
-                }
+            notifyListeners();
+        }
+    }
+
+    private void notifyListeners() {
+        for (NewMailListener listener : listeners) {
+            try {
+                listener.handleNewMail();
+            } catch (RemoteException e) {
+                Log.w(TAG, "Failed to notify listener " + listener, e);
             }
         }
     }
