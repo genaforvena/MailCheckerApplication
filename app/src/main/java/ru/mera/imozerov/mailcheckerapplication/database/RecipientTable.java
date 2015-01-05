@@ -19,7 +19,7 @@ public final class RecipientTable {
     private static final String SQL_CREATE_RECIPIENTS_DATABASE = "CREATE TABLE " + TABLE_NAME
             + " (" + COLUMN_NAME_RECIPENT_ID + EmailDatabaseHelper.INTEGER_TYPE + " PRIMARY KEY AUTOINCREMENT" + EmailDatabaseHelper.COMMA_SEP
             + COLUMN_NAME_EMAIL_ID + EmailDatabaseHelper.INTEGER_TYPE + EmailDatabaseHelper.COMMA_SEP
-            + COLUMN_NAME_RECIPIENT_EMAIL + EmailDatabaseHelper.TEXT_TYPE
+            + COLUMN_NAME_RECIPIENT_EMAIL + EmailDatabaseHelper.TEXT_TYPE + EmailDatabaseHelper.COMMA_SEP
             + "FOREIGN KEY(" + COLUMN_NAME_EMAIL_ID + ") REFERENCES " + EmailTable.TABLE_NAME +
             "(" + EmailTable.COLUMN_NAME_EMAIL_ID + ") ON DELETE CASCADE" + ")";
 

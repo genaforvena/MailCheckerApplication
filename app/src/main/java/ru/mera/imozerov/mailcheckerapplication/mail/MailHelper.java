@@ -8,11 +8,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import javax.mail.BodyPart;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
+import javax.mail.internet.MimeMultipart;
 
 import ru.mera.imozerov.mailcheckerapplication.dto.Email;
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
@@ -64,13 +66,20 @@ public class MailHelper {
                 List<String> in = Arrays.asList(msg.getFrom().toString());
                 email.setSenderEmail(in.get(0));
 
-                String mp = (String) msg.getContent();
-//                BodyPart bp = mp.getBodyPart(0);
+                String content;
+                Object contentObject = msg.getContent();
+                if (contentObject instanceof MimeMultipart) {
+                    BodyPart bp = ((MimeMultipart)contentObject).getBodyPart(0);
+                    content = bp.toString();
+                } else {
+                    content = contentObject.toString();
+                }
+
                 email.setSentDate(msg.getSentDate());
                 email.setSubject(msg.getSubject());
 
                 // TODO get actual content of message
-                email.setContent(mp);
+                email.setContent(content);
 
                 emailListResult.add(email);
             }

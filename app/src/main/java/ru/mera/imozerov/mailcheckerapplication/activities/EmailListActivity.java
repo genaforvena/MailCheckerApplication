@@ -8,6 +8,9 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -33,6 +36,7 @@ public class EmailListActivity extends Activity implements NewMailListener {
             Log.i(TAG, "Service is connected");
             mMailCheckerService = MailCheckerApi.Stub.asInterface(service);
             try {
+                mMailCheckerService.addNewMailListener(EmailListActivity.this);
                 if (!mMailCheckerService.isLoggedIn()) {
                     mMailCheckerService.login(mUserAccount.getEmailAddress(), mUserAccount.getPassword());
                 }
@@ -83,6 +87,36 @@ public class EmailListActivity extends Activity implements NewMailListener {
     @Override
     protected void onPause() {
         super.onPause();
+        unbindService(mServiceConnection);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_email_list, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_logout:
+                logout();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void logout() {
+        new SharedPreferencesHelper().removeUserAccount(this);
+        if (mMailCheckerService != null) {
+            try {
+                mMailCheckerService.removeNewMailListener(this);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Unable to remove this as new email listener!", e);
+            }
+        }
         unbindService(mServiceConnection);
     }
 

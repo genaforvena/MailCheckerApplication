@@ -6,6 +6,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -21,17 +22,15 @@ import ru.mera.imozerov.mailcheckerapplication.mail.MailHelper;
 import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferencesHelper;
 
 public class MailCheckerService extends Service {
-    private static final String TAG = MailCheckerService.class.getName();
-
     public static final String LOGIN = MailCheckerService.class.getName() + "attemptLogin";
     public static final String PASSWORD = MailCheckerService.class.getName() + "password";
-
+    private static final String TAG = MailCheckerService.class.getName();
+    protected MailHelper mMailHelper;
     private List<NewMailListener> listeners = new ArrayList<>();
     private MailCheckerApi.Stub mMailCheckerApi = new MailCheckerApiImplementation();
     private TimerTask mUpdateTask = new UpdateTask();
     private Timer mTimer;
     private SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
-    protected MailHelper mMailHelper;
     private EmailsDataSource mEmailsDataSource = new EmailsDataSource(this);
 
     @Override
@@ -81,34 +80,53 @@ public class MailCheckerService extends Service {
 
         @Override
         public boolean isLoggedIn() throws RemoteException {
-            return MailCheckerService.this.isLoggedIn();
+            synchronized (this) {
+                return MailCheckerService.this.isLoggedIn();
+            }
         }
 
         @Override
         public void login(String login, String password) throws RemoteException {
-            Log.i(TAG, "Logging in to " + login);
-            if (login != null && !login.isEmpty() && password != null && !password.isEmpty()) {
-                UserAccount userAccount = new UserAccount(login, password);
-                new SharedPreferencesHelper().saveUserAccount(MailCheckerService.this, userAccount);
-                scheduleTask();
-            } else {
-                Log.e(TAG, "Check you're passing all values! Login: " + login + "; Password: " + password);
+            synchronized (this) {
+                Log.i(TAG, "Logging in to " + login);
+                if (login != null && !login.isEmpty() && password != null && !password.isEmpty()) {
+                    UserAccount userAccount = new UserAccount(login, password);
+                    new SharedPreferencesHelper().saveUserAccount(MailCheckerService.this, userAccount);
+                    scheduleTask();
+                } else {
+                    Log.e(TAG, "Check you're passing all values! Login: " + login + "; Password: " + password);
+                }
             }
         }
 
         @Override
         public List<Email> getAllEmails() throws RemoteException {
-            return mEmailsDataSource.getAllEmails();
+            synchronized (this) {
+                Log.i(TAG, "Getting all emails");
+                try {
+                    mEmailsDataSource.open();
+                    return mEmailsDataSource.getAllEmails();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    return null;
+                } finally {
+                    mEmailsDataSource.close();
+                }
+            }
         }
 
         @Override
         public void addNewMailListener(NewMailListener listener) throws RemoteException {
-            listeners.add(listener);
+            synchronized (this) {
+                listeners.add(listener);
+            }
         }
 
         @Override
         public void removeNewMailListener(NewMailListener listener) throws RemoteException {
-            listeners.remove(listener);
+            synchronized (this) {
+                listeners.remove(listener);
+            }
         }
     }
 
@@ -126,8 +144,15 @@ public class MailCheckerService extends Service {
                     }
                 }
                 if (emails != null) {
-                    for (Email email : emails) {
-                        mEmailsDataSource.saveEmail(email);
+                    try {
+                        mEmailsDataSource.open();
+                        for (Email email : emails) {
+                            mEmailsDataSource.saveEmail(email);
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    } finally {
+                        mEmailsDataSource.close();
                     }
                 }
             }
