@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ru.mera.imozerov.mailcheckerapplication.MailCheckerApi;
-import ru.mera.imozerov.mailcheckerapplication.NewMailListener;
 import ru.mera.imozerov.mailcheckerapplication.R;
 import ru.mera.imozerov.mailcheckerapplication.adapters.EmailListAdapter;
 import ru.mera.imozerov.mailcheckerapplication.dto.Email;
@@ -30,41 +29,13 @@ public class EmailListActivity extends Activity {
 
     private ListView mEmailListView;
     private EmailListAdapter mEmailListAdapter;
+
     private boolean mIsBound;
     private UserAccount mUserAccount;
     private MailCheckerApi mMailCheckerService;
-    private NewMailListener.Stub mNewMailListener = new NewMailListener.Stub() {
-        @Override
-        public void handleNewMail() throws RemoteException {
-            updateListView();
-        }
-    };
-
-    private ServiceConnection mServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.i(TAG, "Service is connected");
-            mIsBound = true;
-            mMailCheckerService = MailCheckerApi.Stub.asInterface(service);
-            try {
-                mMailCheckerService.addNewMailListener(mNewMailListener);
-                if (!mMailCheckerService.isLoggedIn()) {
-                    mMailCheckerService.login(mUserAccount.getEmailAddress(), mUserAccount.getPassword());
-                }
-            } catch (RemoteException e) {
-                Log.e(TAG, "Unable to login to service!", e);
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.i(TAG, "Service is disconnected");
-            mIsBound = false;
-            mMailCheckerService = null;
-        }
-    };
+    private NewMailListener.Stub mNewMailListener;
+    private ServiceConnection mServiceConnection;
     private List<Email> mEmails;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +46,11 @@ public class EmailListActivity extends Activity {
         if (mUserAccount == null) {
             finish();
             startActivity(new Intent(this, LoginActivity.class));
+        } else {
+            mServiceConnection = new MailCheckerServiceConnection();
+            mNewMailListener = new NewMailListener();
+            Intent intent = new Intent(this, MailCheckerService.class);
+            bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
         }
 
         mEmails = new ArrayList<>();
@@ -82,19 +58,18 @@ public class EmailListActivity extends Activity {
         mEmailListView = (ListView) findViewById(R.id.email_list_view);
         mEmailListAdapter = new EmailListAdapter(this, R.layout.email_row, mEmails);
         mEmailListView.setAdapter(mEmailListAdapter);
-
-        Intent intent = new Intent(this, MailCheckerService.class);
-        bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        try {
-            mMailCheckerService.removeNewMailListener(mNewMailListener);
-            unbindService(mServiceConnection);
-        } catch (RemoteException e) {
-            Log.e(TAG, "Unable to remove new mail listener", e);
+        if (mIsBound) {
+            try {
+                mMailCheckerService.removeNewMailListener(mNewMailListener);
+                unbindService(mServiceConnection);
+            } catch (RemoteException e) {
+                Log.w(TAG, "Unable to remove new mail listener", e);
+            }
         }
     }
 
@@ -122,19 +97,57 @@ public class EmailListActivity extends Activity {
             try {
                 mMailCheckerService.removeNewMailListener(mNewMailListener);
             } catch (RemoteException e) {
-                Log.e(TAG, "Unable to remove this as new email listener!", e);
+                Log.w(TAG, "Unable to remove this as new email listener!", e);
             }
         }
     }
 
     private void updateListView() {
-        try {
-            mEmails = mMailCheckerService.getAllEmails();
-            mEmailListAdapter.clear();
-            mEmailListAdapter.addAll(mEmails);
-            mEmailListAdapter.notifyDataSetChanged();
-        } catch (RemoteException e) {
-            Log.e(TAG, "Unable to get all emails", e);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mEmails = mMailCheckerService.getAllEmails();
+                    mEmailListAdapter.clear();
+                    mEmailListAdapter.addAll(mEmails);
+                    mEmailListAdapter.notifyDataSetChanged();
+                } catch (RemoteException e) {
+                    Log.w(TAG, "Unable to get all emails", e);
+                }
+            }
+        });
+    }
+
+    private class MailCheckerServiceConnection implements ServiceConnection {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.i(TAG, "Service is connected");
+            mIsBound = true;
+            mMailCheckerService = MailCheckerApi.Stub.asInterface(service);
+            try {
+                mMailCheckerService.addNewMailListener(mNewMailListener);
+                if (!mMailCheckerService.isLoggedIn()) {
+                    mMailCheckerService.login(mUserAccount.getEmailAddress(), mUserAccount.getPassword());
+                }
+            } catch (RemoteException e) {
+                Log.w(TAG, "Unable to login to service!", e);
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.i(TAG, "Service is disconnected");
+            mIsBound = false;
+            mMailCheckerService = null;
         }
     }
+
+    private class NewMailListener extends ru.mera.imozerov.mailcheckerapplication.NewMailListener.Stub {
+        @Override
+        public void handleNewMail() throws RemoteException {
+            updateListView();
+        }
+    }
+
+    ;
 }

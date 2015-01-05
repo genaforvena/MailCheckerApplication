@@ -110,7 +110,6 @@ public class MailCheckerService extends Service {
                     e.printStackTrace();
                     return null;
                 } finally {
-                    notifyListeners();
                     mEmailsDataSource.close();
                 }
             }
@@ -150,6 +149,7 @@ public class MailCheckerService extends Service {
                         for (Email email : emails) {
                             mEmailsDataSource.saveEmail(email);
                         }
+                        notifyListeners();
                     } catch (SQLException e) {
                         e.printStackTrace();
                     } finally {
@@ -157,7 +157,6 @@ public class MailCheckerService extends Service {
                     }
                 }
             }
-            notifyListeners();
         }
     }
 
