@@ -12,6 +12,7 @@ import android.util.Log;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -142,7 +143,8 @@ public class MailCheckerService extends Service {
         public void run() {
             Log.i(TAG, "Timer task doing work");
             if (mMailHelper != null) {
-                List<Email> emails = mMailHelper.getEmailsFromInbox();
+                Date lastCheckDate = new Date();
+                List<Email> emails = mMailHelper.getEmailsFromInbox(mSharedPreferencesHelper.getLastCheckDate(MailCheckerService.this));
                 if (BuildConfig.DEBUG) {
                     if (emails != null) {
                         Log.d(TAG, "Got " + emails.size() + " emails");
@@ -158,6 +160,7 @@ public class MailCheckerService extends Service {
                         }
                         notifyListeners();
                         sendNotification(emails);
+                        mSharedPreferencesHelper.saveLastCheckDate(MailCheckerService.this, lastCheckDate);
                     } catch (SQLException e) {
                         e.printStackTrace();
                     } finally {

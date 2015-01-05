@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import java.util.Date;
+
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
 
 /**
@@ -12,10 +14,24 @@ import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
 public class SharedPreferencesHelper {
     public static final String PREFS_LOGIN_USERNAME_KEY = "__USERNAME__";
     public static final String PREFS_LOGIN_PASSWORD_KEY = "__PASSWORD__";
+
+    public static final String PREFS_LAST_CHECK_DATE_KEY = "__LAST_CHECK_DATE__";
     private static final String TAG = SharedPreferencesHelper.class.getName();
 
     public boolean isLoggedIn(Context context) {
         return getUserAccount(context) != null;
+    }
+
+    public void saveLastCheckDate(Context context, Date date) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.putLong(PREFS_LAST_CHECK_DATE_KEY, date.getTime());
+        editor.commit();
+    }
+
+    public Date getLastCheckDate(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return new Date(prefs.getLong(PREFS_LAST_CHECK_DATE_KEY, 0));
     }
 
     public UserAccount getUserAccount(Context context) {

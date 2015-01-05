@@ -4,6 +4,7 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -15,6 +16,9 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.search.ComparisonTerm;
+import javax.mail.search.ReceivedDateTerm;
+import javax.mail.search.SearchTerm;
 
 import ru.mera.imozerov.mailcheckerapplication.dto.Email;
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
@@ -51,14 +55,16 @@ public class MailHelper {
         }
     }
 
-    public List<Email> getEmailsFromInbox() {
+    public List<Email> getEmailsFromInbox(Date startDate) {
         List<Email> emailListResult = new ArrayList<>();
 
         try {
             Store store = getStore();
             Folder inbox = store.getFolder("INBOX");
             inbox.open(Folder.READ_ONLY);
-            Message[] msgs = inbox.getMessages();
+
+            SearchTerm newerThan = new ReceivedDateTerm(ComparisonTerm.GT, startDate);
+            Message[] msgs = inbox.search(newerThan);
 
             for (Message msg : msgs) {
                 Email email = new Email();
