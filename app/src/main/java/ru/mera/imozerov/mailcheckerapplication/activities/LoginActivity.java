@@ -23,6 +23,7 @@ import ru.mera.imozerov.mailcheckerapplication.R;
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
 import ru.mera.imozerov.mailcheckerapplication.jobs.IJobListener;
 import ru.mera.imozerov.mailcheckerapplication.mail.MailHelper;
+import ru.mera.imozerov.mailcheckerapplication.services.MailCheckerService;
 import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferencesHelper;
 
 public class LoginActivity extends Activity {
@@ -165,6 +166,7 @@ public class LoginActivity extends Activity {
             if (success) {
                 mSharedPreferencesHelper.saveUserAccount(LoginActivity.this, mUserAccount);
                 finish();
+                startService(new Intent(LoginActivity.this, MailCheckerService.class));
                 startActivity(new Intent(LoginActivity.this, EmailListActivity.class));
             } else {
                 mUserAccount = null;

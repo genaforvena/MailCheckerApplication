@@ -9,13 +9,10 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import ru.mera.imozerov.mailcheckerapplication.BuildConfig;
 import ru.mera.imozerov.mailcheckerapplication.MailCheckerApi;
 import ru.mera.imozerov.mailcheckerapplication.NewMailListener;
 import ru.mera.imozerov.mailcheckerapplication.R;
@@ -34,23 +31,20 @@ public class EmailListActivity extends Activity implements NewMailListener {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.i(TAG, "Service is connected");
-            Toast.makeText(EmailListActivity.this, "Service is connected!", Toast.LENGTH_SHORT).show();
-            mMailCheckerService = (MailCheckerApi) service;
+            mMailCheckerService = MailCheckerApi.Stub.asInterface(service);
             try {
-                mEmails = mMailCheckerService.getAllEmails();
-                mEmailListAdapter.clear();
-                mEmailListAdapter.addAll(mEmails);
-                mEmailListAdapter.notifyDataSetChanged();
+                if (!mMailCheckerService.isLoggedIn()) {
+                    mMailCheckerService.login(mUserAccount.getEmailAddress(), mUserAccount.getPassword());
+                }
             } catch (RemoteException e) {
-                Log.e(TAG, "Unable to get all emails from service!", e);
+                Log.e(TAG, "Unable to login to service!", e);
             }
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "Service is disconnected");
-            }
+            Log.i(TAG, "Service is disconnected");
+            mMailCheckerService = null;
         }
     };
 
@@ -71,13 +65,6 @@ public class EmailListActivity extends Activity implements NewMailListener {
         }
 
         mEmails = new ArrayList<>();
-        Email dummyEmail = new Email();
-        dummyEmail.setSubject("Subject");
-        dummyEmail.setSenderEmail("Sender");
-        dummyEmail.setSentDate(new Date());
-        mEmails.add(dummyEmail);
-        mEmails.add(dummyEmail);
-        mEmails.add(dummyEmail);
 
         mEmailListView = (ListView) findViewById(R.id.email_list_view);
         mEmailListAdapter = new EmailListAdapter(this, R.layout.email_row, mEmails);
@@ -101,9 +88,11 @@ public class EmailListActivity extends Activity implements NewMailListener {
 
     @Override
     public void handleNewMail() throws RemoteException {
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "New email arrived!");
-        }
+        Log.i(TAG, "New email arrived!");
+        mEmails = mMailCheckerService.getAllEmails();
+        mEmailListAdapter.clear();
+        mEmailListAdapter.addAll(mEmails);
+        mEmailListAdapter.notifyDataSetChanged();
     }
 
     @Override

@@ -8,11 +8,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import javax.mail.BodyPart;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
 import javax.mail.Session;
 import javax.mail.Store;
 
@@ -66,13 +64,13 @@ public class MailHelper {
                 List<String> in = Arrays.asList(msg.getFrom().toString());
                 email.setSenderEmail(in.get(0));
 
-                Multipart mp = (Multipart) msg.getContent();
-                BodyPart bp = mp.getBodyPart(0);
+                String mp = (String) msg.getContent();
+//                BodyPart bp = mp.getBodyPart(0);
                 email.setSentDate(msg.getSentDate());
                 email.setSubject(msg.getSubject());
 
                 // TODO get actual content of message
-                email.setContent(bp.getContent().toString());
+                email.setContent(mp);
 
                 emailListResult.add(email);
             }

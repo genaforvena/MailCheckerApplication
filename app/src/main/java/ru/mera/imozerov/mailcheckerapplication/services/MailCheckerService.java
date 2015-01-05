@@ -30,61 +30,39 @@ public class MailCheckerService extends Service {
     private MailCheckerApi.Stub mMailCheckerApi = new MailCheckerApiImplementation();
     private TimerTask mUpdateTask = new UpdateTask();
     private Timer mTimer;
-    private UserAccount mUserAccount;
     private SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
     protected MailHelper mMailHelper;
     private EmailsDataSource mEmailsDataSource = new EmailsDataSource(this);
 
     @Override
     public IBinder onBind(Intent intent) {
-        if (MailCheckerService.class.getName().equals(intent.getAction())) {
-            attemptLogin(intent);
-            if (isLoggedIn()) {
-                if (BuildConfig.DEBUG) {
-                    Log.d(TAG, "Bound by intent " + intent);
-                }
-                return mMailCheckerApi;
-            }
-        }
-        return null;
+        Log.i(TAG, "binding service");
+        return mMailCheckerApi;
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "Starting service");
-        if (isLoggedIn()) {
-            scheduleTask();
-        } else {
-            Log.i(TAG, "Stopping service as user is not logged in");
-            stopSelf();
-        }
-        return Service.START_NOT_STICKY;
+        return super.onStartCommand(intent, flags, startId);
     }
 
-    private void attemptLogin(Intent intent) {
-        String login = intent.getStringExtra(LOGIN);
-        String password = intent.getStringExtra(PASSWORD);
-        mUserAccount = new UserAccount(login, password);
-        if (mUserAccount != null) {
-            setMailHelper(new MailHelper(mUserAccount));
-            if (mMailHelper.isAbleToLogin()) {
-                mSharedPreferencesHelper.saveUserAccount(this, mUserAccount);
-                scheduleTask();
-            }
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        if (isLoggedIn()) {
+            scheduleTask();
         }
     }
 
     private void scheduleTask() {
+        UserAccount userAccount = mSharedPreferencesHelper.getUserAccount(this);
+        setMailHelper(new MailHelper(userAccount));
         mTimer = new Timer("MailCheckerTimer");
         mTimer.schedule(mUpdateTask, 1000L, 60 * 1000L);
     }
 
     private boolean isLoggedIn() {
         return mSharedPreferencesHelper.isLoggedIn(this);
-    }
-
-    TimerTask getUpdateTask() {
-        return mUpdateTask;
     }
 
     Timer getTimer() {
@@ -100,19 +78,27 @@ public class MailCheckerService extends Service {
     }
 
     class MailCheckerApiImplementation extends MailCheckerApi.Stub {
+
         @Override
         public boolean isLoggedIn() throws RemoteException {
             return MailCheckerService.this.isLoggedIn();
         }
 
         @Override
-        public void forceRefresh() {
-
+        public void login(String login, String password) throws RemoteException {
+            Log.i(TAG, "Logging in to " + login);
+            if (login != null && !login.isEmpty() && password != null && !password.isEmpty()) {
+                UserAccount userAccount = new UserAccount(login, password);
+                new SharedPreferencesHelper().saveUserAccount(MailCheckerService.this, userAccount);
+                scheduleTask();
+            } else {
+                Log.e(TAG, "Check you're passing all values! Login: " + login + "; Password: " + password);
+            }
         }
 
         @Override
         public List<Email> getAllEmails() throws RemoteException {
-            return null;
+            return mEmailsDataSource.getAllEmails();
         }
 
         @Override

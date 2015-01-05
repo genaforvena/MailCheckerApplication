@@ -14,6 +14,14 @@ import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferenc
  */
 public class MailCheckerServiceTest extends ServiceTestCase<MailCheckerService> {
     public static final UserAccount DUMMY_ACCOUNT = new UserAccount("dummy@gmail.com", "dummy_pass");
+    private static MailHelper sMailHelper = new MailHelper(DUMMY_ACCOUNT) {
+        @Override
+        public boolean isAbleToLogin() {
+            return true;
+        }
+    };
+
+
     private MailCheckerService mMailCheckerService;
 
     public MailCheckerServiceTest(Class serviceClass) {
@@ -31,15 +39,9 @@ public class MailCheckerServiceTest extends ServiceTestCase<MailCheckerService> 
         mMailCheckerService = new MailCheckerService() {
             @Override
             void setMailHelper(MailHelper mMailHelper) {
-                this.mMailHelper = new MailHelper(DUMMY_ACCOUNT) {
-                    @Override
-                    public boolean isAbleToLogin() {
-                        return true;
-                    }
-                };
+                this.mMailHelper = sMailHelper;
             }
         };
-
     }
 
     public void testPreconditions() {
@@ -51,69 +53,47 @@ public class MailCheckerServiceTest extends ServiceTestCase<MailCheckerService> 
         startService(intent);
     }
 
-    public void testOnBind_notLoggedInAndNotAttempting() {
-        mMailCheckerService.setSharedPreferencesHelper(new SharedPreferencesHelper() {
-            @Override
-            public boolean isLoggedIn(Context context) {
-                return false;
-            }
-            @Override
-            public void saveUserAccount(Context context, UserAccount account) {}
-        });
-
-        Intent intent = new Intent(MailCheckerService.class.getName());
-        IBinder binder = mMailCheckerService.onBind(intent);
-        assertNull(binder);
-    }
-
-    public void testOnBind_loginAttemptSuccess() {
+    public void testOnBind() {
         mMailCheckerService.setSharedPreferencesHelper(new SharedPreferencesHelper() {
             @Override
             public boolean isLoggedIn(Context context) {
                 return true;
             }
-            @Override
-            public void saveUserAccount(Context context, UserAccount account) {}
         });
 
         Intent intent = new Intent(MailCheckerService.class.getName());
-        intent.putExtra(MailCheckerService.LOGIN, "login");
-        intent.putExtra(MailCheckerService.PASSWORD, "password");
         IBinder binder = mMailCheckerService.onBind(intent);
 
         assertEquals(MailCheckerService.MailCheckerApiImplementation.class, binder.getClass());
-        assertNotNull(mMailCheckerService.getUpdateTask());
-        assertNotNull(mMailCheckerService.getTimer());
     }
 
-    public void testOnStartCommand_notLoggedIn() {
+    public void testOnCreate_notLoggedIn() {
         mMailCheckerService.setSharedPreferencesHelper(new SharedPreferencesHelper() {
             @Override
             public boolean isLoggedIn(Context context) {
                 return false;
             }
-            @Override
-            public void saveUserAccount(Context context, UserAccount account) {}
         });
 
-        Intent intent = new Intent(MailCheckerService.class.getName());
-        mMailCheckerService.onStartCommand(intent, 0, 0);
+        mMailCheckerService.onCreate();
 
         assertNull(mMailCheckerService.getTimer());
     }
 
-    public void testOnStartCommand_loggedIn() {
+    public void testOnCreate_loggedIn() {
         mMailCheckerService.setSharedPreferencesHelper(new SharedPreferencesHelper() {
             @Override
             public boolean isLoggedIn(Context context) {
                 return true;
             }
+
             @Override
-            public void saveUserAccount(Context context, UserAccount account) {}
+            public UserAccount getUserAccount(Context context) {
+                return DUMMY_ACCOUNT;
+            }
         });
 
-        Intent intent = new Intent(MailCheckerService.class.getName());
-        mMailCheckerService.onStartCommand(intent, 0, 0);
+        mMailCheckerService.onCreate();
 
         assertNotNull(mMailCheckerService.getTimer());
     }
