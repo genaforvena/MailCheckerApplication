@@ -34,6 +34,10 @@ public class EmailsDataSource {
         mEmailDatabaseHelper.close();
     }
 
+    public void deleteAllEntries() {
+        mEmailDatabaseHelper.deleteAllEntries(mDatabase);
+    }
+
     public void saveEmail(Email email) {
         if (email == null) {
             Log.w(TAG, "email is null!");

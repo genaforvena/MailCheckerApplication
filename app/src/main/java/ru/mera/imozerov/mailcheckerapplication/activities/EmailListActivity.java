@@ -106,13 +106,14 @@ public class EmailListActivity extends Activity {
     }
 
     private void logout() {
-        mSharedPreferencesHelper.removeUserAccount(this);
         if (mIsBound) {
             try {
-                mMailCheckerService.removeNewMailListener(mNewMailListener);
+                mMailCheckerService.logout();
             } catch (RemoteException e) {
-                Log.w(TAG, "Unable to remove this as new email listener!", e);
+                Log.w(TAG, "Unable to log out!", e);
             }
+        } else {
+            mSharedPreferencesHelper.removeUserAccount(this);
         }
         finish();
         startActivity(new Intent(this, LoginActivity.class));

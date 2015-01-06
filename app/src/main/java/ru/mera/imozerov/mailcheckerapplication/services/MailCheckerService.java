@@ -33,7 +33,7 @@ public class MailCheckerService extends Service {
     public static final String PASSWORD = MailCheckerService.class.getName() + "password";
     private static final String TAG = MailCheckerService.class.getName();
     protected MailHelper mMailHelper;
-    private List<NewMailListener> listeners = new ArrayList<>();
+    private List<NewMailListener> mListeners = new ArrayList<>();
     private MailCheckerApi.Stub mMailCheckerApi = new MailCheckerApiImplementation();
     private TimerTask mUpdateTask = new UpdateTask();
     private Timer mTimer;
@@ -101,11 +101,22 @@ public class MailCheckerService extends Service {
                 Log.i(TAG, "Logging in to " + login);
                 if (login != null && !login.isEmpty() && password != null && !password.isEmpty()) {
                     UserAccount userAccount = new UserAccount(login, password);
-                    new SharedPreferencesHelper().saveUserAccount(MailCheckerService.this, userAccount);
+                    mSharedPreferencesHelper.saveUserAccount(MailCheckerService.this, userAccount);
                     scheduleTask();
                 } else {
                     Log.e(TAG, "Check you're passing all values! Login: " + login + "; Password: " + password);
                 }
+            }
+        }
+
+        @Override
+        public void logout() throws RemoteException {
+            synchronized (mLock) {
+                Log.i(TAG, "Logging out");
+                mSharedPreferencesHelper.removeUserAccount(MailCheckerService.this);
+                mEmailsDataSource.deleteAllEntries();
+                mTimer = null;
+                mListeners.clear();
             }
         }
 
@@ -128,14 +139,14 @@ public class MailCheckerService extends Service {
         @Override
         public void addNewMailListener(NewMailListener listener) throws RemoteException {
             synchronized (mLock) {
-                listeners.add(listener);
+                mListeners.add(listener);
             }
         }
 
         @Override
         public void removeNewMailListener(NewMailListener listener) throws RemoteException {
             synchronized (mLock) {
-                listeners.remove(listener);
+                mListeners.remove(listener);
             }
         }
     }
@@ -205,7 +216,7 @@ public class MailCheckerService extends Service {
     }
 
     private void notifyListeners() {
-        for (NewMailListener listener : listeners) {
+        for (NewMailListener listener : mListeners) {
             try {
                 listener.handleNewMail();
             } catch (RemoteException e) {

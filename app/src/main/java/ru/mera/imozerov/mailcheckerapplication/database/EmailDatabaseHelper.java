@@ -34,4 +34,9 @@ public class EmailDatabaseHelper extends SQLiteOpenHelper {
         EmailTable.onUpgrade(db, oldVersion, newVersion);
         RecipientTable.onUpgrade(db, oldVersion, newVersion);
     }
+
+    public void deleteAllEntries(SQLiteDatabase db) {
+        EmailTable.recreateDb(db);
+        RecipientTable.recreateDb(db);
+    }
 }

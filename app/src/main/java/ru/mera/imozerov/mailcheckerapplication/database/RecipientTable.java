@@ -31,6 +31,10 @@ public final class RecipientTable {
 
     public static void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.i(TAG, "Upgrading db from " + oldVersion + " to " + newVersion);
+        recreateDb(db);
+    }
+
+    public static void recreateDb(SQLiteDatabase db) {
         db.execSQL(SQL_DELETE_RECIPIENTS_DATABASE);
         onCreate(db);
     }
