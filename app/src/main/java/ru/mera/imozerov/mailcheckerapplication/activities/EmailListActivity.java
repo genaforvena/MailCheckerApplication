@@ -34,6 +34,8 @@ public class EmailListActivity extends Activity {
     private ListView mEmailListView;
     private EmailListAdapter mEmailListAdapter;
 
+    private SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
+
     private boolean mIsBound;
     private UserAccount mUserAccount;
     private MailCheckerApi mMailCheckerService;
@@ -46,10 +48,9 @@ public class EmailListActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_email_list);
 
-        mUserAccount = new SharedPreferencesHelper().getUserAccount(this);
+        mUserAccount = mSharedPreferencesHelper.getUserAccount(this);
         if (mUserAccount == null) {
-            finish();
-            startActivity(new Intent(this, LoginActivity.class));
+            logout();
         } else {
             mServiceConnection = new MailCheckerServiceConnection();
             mNewMailListener = new NewMailListener();
@@ -105,7 +106,7 @@ public class EmailListActivity extends Activity {
     }
 
     private void logout() {
-        new SharedPreferencesHelper().removeUserAccount(this);
+        mSharedPreferencesHelper.removeUserAccount(this);
         if (mIsBound) {
             try {
                 mMailCheckerService.removeNewMailListener(mNewMailListener);
@@ -113,6 +114,8 @@ public class EmailListActivity extends Activity {
                 Log.w(TAG, "Unable to remove this as new email listener!", e);
             }
         }
+        finish();
+        startActivity(new Intent(this, LoginActivity.class));
     }
 
     private void updateListView() {
