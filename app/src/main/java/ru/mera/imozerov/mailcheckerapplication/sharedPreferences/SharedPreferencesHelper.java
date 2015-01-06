@@ -6,6 +6,7 @@ import android.preference.PreferenceManager;
 
 import java.util.Date;
 
+import ru.mera.imozerov.mailcheckerapplication.dto.Email;
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
 
 /**
@@ -14,9 +15,13 @@ import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
 public class SharedPreferencesHelper {
     private static final String TAG = SharedPreferencesHelper.class.getName();
 
-    public static final String PREFS_LOGIN_USERNAME_KEY = "__USERNAME__";
-    public static final String PREFS_LOGIN_PASSWORD_KEY = "__PASSWORD__";
-    public static final String PREFS_LAST_CHECK_DATE_KEY = "__LAST_CHECK_DATE__";
+    private static final String PREFS_LOGIN_USERNAME_KEY = "__USERNAME__";
+    private static final String PREFS_LOGIN_PASSWORD_KEY = "__PASSWORD__";
+    private static final String PREFS_LAST_CHECK_DATE_KEY = "__LAST_CHECK_DATE__";
+    private static final String EMAIL_SUBJECT = "__EMAIL_SUBJECT__";
+    private static final String EMAIL_SENDER_EMAIL = "__EMAIL_SENDER_EMAIL__";
+    private static final String EMAIL_SENT_DATE = "__EMAIL_SENT_DATE__";
+    private static final String EMAIL_CONTENT = "__EMAIL_CONTENT__";
 
     public boolean isLoggedIn(Context context) {
         return getUserAccount(context) != null;
@@ -57,6 +62,22 @@ public class SharedPreferencesHelper {
         removeFromPrefs(context, PREFS_LOGIN_USERNAME_KEY);
     }
 
+    public void saveLastSeenEmail(Context context, Email email) {
+        saveToPrefs(context, EMAIL_SUBJECT, email.getSubject());
+        saveToPrefs(context, EMAIL_SENDER_EMAIL, email.getSenderEmail());
+        saveToPrefs(context, EMAIL_SENT_DATE, email.getSentDate().getTime());
+        saveToPrefs(context, EMAIL_CONTENT, email.getContent());
+    }
+
+    public Email getLastSeenEmail(Context context) {
+        Email email = new Email();
+        email.setSenderEmail(getFromPrefs(context, EMAIL_SENDER_EMAIL, ""));
+        email.setSubject(getFromPrefs(context, EMAIL_SUBJECT, ""));
+        email.setSentDate(new Date(getFromPrefs(context, EMAIL_SENT_DATE, 0)));
+        email.setContent(getFromPrefs(context, EMAIL_CONTENT, ""));
+        return email;
+    }
+
     private void saveToPrefs(Context context, String key, String value) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         final SharedPreferences.Editor editor = prefs.edit();
@@ -64,9 +85,22 @@ public class SharedPreferencesHelper {
         editor.commit();
     }
 
+    private void saveToPrefs(Context context, String key, long value) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.putLong(key, value);
+        editor.commit();
+    }
+
     private String getFromPrefs(Context context, String key, String defaultValue) {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
         return sharedPrefs.getString(key, defaultValue);
+    }
+
+
+    private long getFromPrefs(Context context, String key, long defaultValue) {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return sharedPrefs.getLong(key, defaultValue);
     }
 
     private void removeFromPrefs(Context context, String key) {

@@ -7,9 +7,12 @@ import android.widget.TextView;
 
 import ru.mera.imozerov.mailcheckerapplication.R;
 import ru.mera.imozerov.mailcheckerapplication.dto.Email;
+import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferencesHelper;
 
 public class EmailViewActivity extends Activity {
     private static final String TAG = EmailViewActivity.class.getName();
+
+    private SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
 
     private TextView mSubjectView;
     private TextView mSentTimeView;
@@ -23,7 +26,12 @@ public class EmailViewActivity extends Activity {
         setContentView(R.layout.activity_email_view);
 
         Intent intent = getIntent();
-        mEmail = intent.getParcelableExtra(EmailListActivity.EMAIL_EXTRA);
+        if (intent.getExtras() != null) {
+            mEmail = intent.getParcelableExtra(EmailListActivity.EMAIL_EXTRA);
+            mSharedPreferencesHelper.saveLastSeenEmail(this, mEmail);
+        } else {
+            mEmail = mSharedPreferencesHelper.getLastSeenEmail(this);
+        }
 
         mSubjectView = (TextView) findViewById(R.id.email_view_subject);
         mSentTimeView = (TextView) findViewById(R.id.email_view_sent_time);

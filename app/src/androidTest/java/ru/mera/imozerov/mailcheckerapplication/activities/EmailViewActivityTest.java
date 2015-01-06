@@ -3,18 +3,22 @@ package ru.mera.imozerov.mailcheckerapplication.activities;
 import android.content.Context;
 import android.content.Intent;
 import android.test.ActivityUnitTestCase;
+import android.test.suitebuilder.annotation.MediumTest;
 import android.widget.TextView;
 
 import java.util.Date;
 
 import ru.mera.imozerov.mailcheckerapplication.R;
 import ru.mera.imozerov.mailcheckerapplication.dto.Email;
+import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferencesHelper;
 
 /**
  * Created by imozerov on 06.01.2015.
  */
 public class EmailViewActivityTest extends ActivityUnitTestCase<EmailViewActivity> {
     private EmailViewActivity mEmailViewActivity;
+    private SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
+
     private Context mContext;
     private TextView mSubjectView;
     private TextView mContentView;
@@ -65,5 +69,32 @@ public class EmailViewActivityTest extends ActivityUnitTestCase<EmailViewActivit
         assertEquals(sEmail.getContent(), mContentView.getText().toString());
         assertEquals(sEmail.getSenderEmail(), mSenderView.getText().toString());
         assertEquals(sEmail.getSentDate().toString(), mSentDateView.getText().toString());
+    }
+
+    public void test_saveLastSeenEmail() {
+        getInstrumentation().callActivityOnStart(mEmailViewActivity);
+        getInstrumentation().callActivityOnResume(mEmailViewActivity);
+        getInstrumentation().callActivityOnPause(mEmailViewActivity);
+        getInstrumentation().callActivityOnStop(mEmailViewActivity);
+        getInstrumentation().callActivityOnStart(mEmailViewActivity);
+
+        assertEquals(sEmail.getSubject(), mSubjectView.getText().toString());
+        assertEquals(sEmail.getContent(), mContentView.getText().toString());
+        assertEquals(sEmail.getSenderEmail(), mSenderView.getText().toString());
+        assertEquals(sEmail.getSentDate().toString(), mSentDateView.getText().toString());
+
+        Email savedEmail = mSharedPreferencesHelper.getLastSeenEmail(mContext);
+        assertEquals(sEmail.getSubject(),savedEmail.getSubject());
+        assertEquals(sEmail.getContent(), savedEmail.getContent());
+        assertEquals(sEmail.getSenderEmail(), savedEmail.getSenderEmail());
+        assertEquals(sEmail.getSentDate(), savedEmail.getSentDate());
+    }
+
+    @MediumTest
+    public void testLifeCycleCreate() {
+        getInstrumentation().callActivityOnStart(mEmailViewActivity);
+        getInstrumentation().callActivityOnResume(mEmailViewActivity);
+        getInstrumentation().callActivityOnPause(mEmailViewActivity);
+        getInstrumentation().callActivityOnStop(mEmailViewActivity);
     }
 }
