@@ -29,7 +29,7 @@ import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferenc
 
 public class EmailListActivity extends Activity {
     private static final String TAG = EmailListActivity.class.getName();
-    public static final String EVENT = EmailListActivity.class.getName() + "Email";
+    public static final String EMAIL_EXTRA = EmailListActivity.class.getName() + "Email";
 
     private ListView mEmailListView;
     private EmailListAdapter mEmailListAdapter;
@@ -67,7 +67,7 @@ public class EmailListActivity extends Activity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Email email = mEmails.get(position);
                 Intent intent = new Intent(EmailListActivity.this, EmailViewActivity.class);
-                intent.putExtra(EVENT, email);
+                intent.putExtra(EMAIL_EXTRA, email);
                 startActivity(intent);
             }
         });

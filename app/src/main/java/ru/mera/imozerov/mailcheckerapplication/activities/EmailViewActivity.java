@@ -23,7 +23,7 @@ public class EmailViewActivity extends Activity {
         setContentView(R.layout.activity_email_view);
 
         Intent intent = getIntent();
-        mEmail = intent.getParcelableExtra(EmailListActivity.EVENT);
+        mEmail = intent.getParcelableExtra(EmailListActivity.EMAIL_EXTRA);
 
         mSubjectView = (TextView) findViewById(R.id.email_view_subject);
         mSentTimeView = (TextView) findViewById(R.id.email_view_sent_time);

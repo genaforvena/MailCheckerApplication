@@ -41,6 +41,8 @@ public class MailCheckerService extends Service {
     private EmailsDataSource mEmailsDataSource = new EmailsDataSource(this);
     private NotificationManager mNotificationManager;
 
+    private Object mLock = new Object();
+
     @Override
     public IBinder onBind(Intent intent) {
         Log.i(TAG, "binding service");
@@ -88,14 +90,14 @@ public class MailCheckerService extends Service {
 
         @Override
         public boolean isLoggedIn() throws RemoteException {
-            synchronized (this) {
+            synchronized (mLock) {
                 return MailCheckerService.this.isLoggedIn();
             }
         }
 
         @Override
         public void login(String login, String password) throws RemoteException {
-            synchronized (this) {
+            synchronized (mLock) {
                 Log.i(TAG, "Logging in to " + login);
                 if (login != null && !login.isEmpty() && password != null && !password.isEmpty()) {
                     UserAccount userAccount = new UserAccount(login, password);
@@ -109,7 +111,7 @@ public class MailCheckerService extends Service {
 
         @Override
         public List<Email> getAllEmails() throws RemoteException {
-            synchronized (this) {
+            synchronized (mLock) {
                 Log.i(TAG, "Getting all emails");
                 try {
                     mEmailsDataSource.open();
@@ -125,14 +127,14 @@ public class MailCheckerService extends Service {
 
         @Override
         public void addNewMailListener(NewMailListener listener) throws RemoteException {
-            synchronized (this) {
+            synchronized (mLock) {
                 listeners.add(listener);
             }
         }
 
         @Override
         public void removeNewMailListener(NewMailListener listener) throws RemoteException {
-            synchronized (this) {
+            synchronized (mLock) {
                 listeners.remove(listener);
             }
         }

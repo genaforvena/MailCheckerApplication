@@ -4,6 +4,7 @@ import android.test.InstrumentationTestCase;
 
 import org.mockito.Mockito;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.mail.Folder;
@@ -11,10 +12,12 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Store;
+import javax.mail.search.SearchTerm;
 
 import ru.mera.imozerov.mailcheckerapplication.dto.Email;
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -37,7 +40,7 @@ public class MailHelperTest extends InstrumentationTestCase {
         Message[] msgs = {msg, msg, msg};
 
         when(store.getFolder(Mockito.anyString())).thenReturn(inbox);
-        when(inbox.getMessages()).thenReturn(msgs);
+        when(inbox.search((SearchTerm) any())).thenReturn(msgs);
         when(msg.getContent()).thenReturn(multipart);
 
         mMailHelper = new MailHelper(account) {
@@ -53,7 +56,7 @@ public class MailHelperTest extends InstrumentationTestCase {
     }
 
     public void testGetEmailsFromInbox() {
-        List<Email> result = mMailHelper.getEmailsFromInbox();
+        List<Email> result = mMailHelper.getEmailsFromInbox(new Date(0));
         assertNotNull(result);
         assertEquals(3, result.size());
     }
