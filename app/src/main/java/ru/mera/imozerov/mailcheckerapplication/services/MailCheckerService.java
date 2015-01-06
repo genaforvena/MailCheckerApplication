@@ -114,6 +114,7 @@ public class MailCheckerService extends Service {
             synchronized (mLock) {
                 Log.i(TAG, "Logging out");
                 mSharedPreferencesHelper.removeUserAccount(MailCheckerService.this);
+                mSharedPreferencesHelper.removeLastCheckDate(MailCheckerService.this);
                 mEmailsDataSource.deleteAllEntries();
                 mTimer = null;
                 mListeners.clear();

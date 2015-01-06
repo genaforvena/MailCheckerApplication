@@ -12,11 +12,11 @@ import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
  * Created by imozerov on 24.12.2014.
  */
 public class SharedPreferencesHelper {
+    private static final String TAG = SharedPreferencesHelper.class.getName();
+
     public static final String PREFS_LOGIN_USERNAME_KEY = "__USERNAME__";
     public static final String PREFS_LOGIN_PASSWORD_KEY = "__PASSWORD__";
-
     public static final String PREFS_LAST_CHECK_DATE_KEY = "__LAST_CHECK_DATE__";
-    private static final String TAG = SharedPreferencesHelper.class.getName();
 
     public boolean isLoggedIn(Context context) {
         return getUserAccount(context) != null;
@@ -32,6 +32,10 @@ public class SharedPreferencesHelper {
     public Date getLastCheckDate(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         return new Date(prefs.getLong(PREFS_LAST_CHECK_DATE_KEY, 0));
+    }
+
+    public void removeLastCheckDate(Context context) {
+        removeFromPrefs(context, PREFS_LAST_CHECK_DATE_KEY);
     }
 
     public UserAccount getUserAccount(Context context) {
