@@ -50,7 +50,8 @@ public class EmailListActivity extends Activity {
 
         mUserAccount = mSharedPreferencesHelper.getUserAccount(this);
         if (mUserAccount == null) {
-            logout();
+            finish();
+            startActivity(new Intent(this, LoginActivity.class));
         } else {
             mServiceConnection = new MailCheckerServiceConnection();
             mNewMailListener = new NewMailListener();
