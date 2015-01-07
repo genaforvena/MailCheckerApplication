@@ -36,7 +36,7 @@ public class MailCheckerService extends Service {
     protected MailHelper mMailHelper;
     private List<NewMailListener> mListeners = new ArrayList<NewMailListener>();
     private MailCheckerApi.Stub mMailCheckerApi = new MailCheckerApiImplementation();
-    private TimerTask mUpdateTask = new UpdateTask();
+    private TimerTask mUpdateTask = new DownloadNewEmailsTask();
     private Timer mTimer;
     private SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
     private EmailsDataSource mEmailsDataSource = new EmailsDataSource(this);
@@ -153,10 +153,10 @@ public class MailCheckerService extends Service {
         }
     }
 
-    class UpdateTask extends TimerTask {
+    class DownloadNewEmailsTask extends TimerTask {
         @Override
         public void run() {
-            Log.i(TAG, "Timer task doing work");
+            Log.i(TAG, "Checking for e-mails.");
             if (mMailHelper != null) {
                 Date lastCheckDate = new Date();
                 List<Email> emails = mMailHelper.getEmailsFromInbox(mSharedPreferencesHelper.getLastCheckDate(MailCheckerService.this));
