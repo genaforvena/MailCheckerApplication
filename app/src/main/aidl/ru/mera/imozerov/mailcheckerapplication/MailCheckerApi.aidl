@@ -6,7 +6,7 @@ import ru.mera.imozerov.mailcheckerapplication.NewMailListener;
 import ru.mera.imozerov.mailcheckerapplication.dto.Email;
 
 interface MailCheckerApi {
-    boolean isLoggedIn();
+    boolean hasCredentials();
     void login(String login, String password);
     void logout();
     List<Email> getAllEmails();

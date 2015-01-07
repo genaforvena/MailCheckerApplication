@@ -32,7 +32,7 @@ public class MailHelper {
     private final UserAccount mUserAccount;
     private final Properties mProps;
 
-    public MailHelper(UserAccount userAccount){
+    public MailHelper(UserAccount aUserAccount){
         mProps = new Properties();
         mProps.setProperty("mail.store.protocol", "imaps");
 
@@ -42,7 +42,7 @@ public class MailHelper {
         mProps.setProperty("mail.pop3.port", "995");
         mProps.setProperty("mail.pop3.socketFactory.port", "995");
 
-        this.mUserAccount = userAccount;
+        this.mUserAccount = aUserAccount;
     }
 
     public boolean isAbleToLogin() {
@@ -55,21 +55,21 @@ public class MailHelper {
         }
     }
 
-    public List<Email> getEmailsFromInbox(Date startDate) {
-        List<Email> emailListResult = new ArrayList<>();
+    public List<Email> getEmailsFromInbox(Date aStartDate) {
+        List<Email> emailListResult = new ArrayList<Email>();
 
         try {
             Store store = getStore();
             Folder inbox = store.getFolder("INBOX");
             inbox.open(Folder.READ_ONLY);
 
-            SearchTerm newerThan = new ReceivedDateTerm(ComparisonTerm.GT, startDate);
+            SearchTerm newerThan = new ReceivedDateTerm(ComparisonTerm.GT, aStartDate);
             Message[] msgs = inbox.search(newerThan);
 
             for (Message msg : msgs) {
                 Email email = new Email();
 
-                List<String> senders = new ArrayList<>();
+                List<String> senders = new ArrayList<String>();
                 for (Address sender : msg.getFrom()) {
                     senders.add(sender.toString());
                 }
@@ -91,9 +91,9 @@ public class MailHelper {
         return emailListResult;
     }
 
-    private String getContent(Message msg) throws IOException, MessagingException {
+    private String getContent(Message aMessage) throws IOException, MessagingException {
         String content = null;
-        Object contentObject = msg.getContent();
+        Object contentObject = aMessage.getContent();
         if (contentObject instanceof MimeMultipart) {
             MimeMultipart multipart = (MimeMultipart) contentObject;
             for (int j = 0; j < multipart.getCount(); j++) {

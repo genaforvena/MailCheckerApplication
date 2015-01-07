@@ -22,21 +22,21 @@ public class EmailDatabaseHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onCreate(SQLiteDatabase db) {
+    public void onCreate(SQLiteDatabase aSQLiteDatabase) {
         Log.i(TAG, "Creating dbs");
-        EmailTable.onCreate(db);
-        RecipientTable.onCreate(db);
+        EmailTable.onCreate(aSQLiteDatabase);
+        RecipientTable.onCreate(aSQLiteDatabase);
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.i(TAG, "Upgrading db from " + oldVersion + " to " + newVersion);
-        EmailTable.onUpgrade(db, oldVersion, newVersion);
-        RecipientTable.onUpgrade(db, oldVersion, newVersion);
+    public void onUpgrade(SQLiteDatabase aSQLiteDatabase, int aOldVersion, int aNewVersion) {
+        Log.i(TAG, "Upgrading db from " + aOldVersion + " to " + aNewVersion);
+        EmailTable.onUpgrade(aSQLiteDatabase, aOldVersion, aNewVersion);
+        RecipientTable.onUpgrade(aSQLiteDatabase, aOldVersion, aNewVersion);
     }
 
-    public void deleteAllEntries(SQLiteDatabase db) {
-        EmailTable.recreateDb(db);
-        RecipientTable.recreateDb(db);
+    public void deleteAllEntries(SQLiteDatabase aSQLiteDatabase) {
+        EmailTable.recreateDb(aSQLiteDatabase);
+        RecipientTable.recreateDb(aSQLiteDatabase);
     }
 }

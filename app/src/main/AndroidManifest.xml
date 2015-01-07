@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ru.mera.imozerov.mailcheckerapplication" >
+    package="ru.mera.imozerov.mailcheckerapplication">
 
     <uses-sdk android:minSdkVersion="3" />
 
@@ -14,16 +14,15 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <activity
             android:name=".activities.LoginActivity"
-            android:label="@string/app_name" >
-        </activity>
+            android:label="@string/app_name"></activity>
 
         <receiver
             android:name=".broadcastReceivers.SystemBootReceiver"
             android:enabled="true"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
@@ -33,7 +32,7 @@
             android:name=".services.MailCheckerService"
             android:enabled="true"
             android:exported="true"
-            android:process=":remote" >
+            android:process=":remote">
             <intent-filter>
                 <action android:name="ru.mera.imozerov.mailcheckerapplication.services.MailCheckerService" />
             </intent-filter>
@@ -41,7 +40,7 @@
 
         <activity
             android:name=".activities.EmailListActivity"
-            android:label="@string/title_activity_email_list" >
+            android:label="@string/title_activity_email_list">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

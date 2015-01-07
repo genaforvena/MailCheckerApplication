@@ -44,8 +44,8 @@ public class EmailListActivity extends Activity {
     private List<Email> mEmails;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle aSavedInstanceState) {
+        super.onCreate(aSavedInstanceState);
         setContentView(R.layout.activity_email_list);
 
         mUserAccount = mSharedPreferencesHelper.getUserAccount(this);
@@ -89,20 +89,20 @@ public class EmailListActivity extends Activity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(Menu aMenu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_email_list, menu);
+        inflater.inflate(R.menu.menu_email_list, aMenu);
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
+    public boolean onOptionsItemSelected(MenuItem aMenuItem) {
+        switch (aMenuItem.getItemId()) {
             case R.id.action_logout:
                 logout();
                 return true;
             default:
-                return super.onOptionsItemSelected(item);
+                return super.onOptionsItemSelected(aMenuItem);
         }
     }
 
@@ -139,10 +139,10 @@ public class EmailListActivity extends Activity {
 
     private class MailCheckerServiceConnection implements ServiceConnection {
         @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
+        public void onServiceConnected(ComponentName aComponentName, IBinder aService) {
             Log.i(TAG, "Service is connected");
             mIsBound = true;
-            mMailCheckerService = MailCheckerApi.Stub.asInterface(service);
+            mMailCheckerService = MailCheckerApi.Stub.asInterface(aService);
             try {
                 mMailCheckerService.addNewMailListener(mNewMailListener);
                 if (!mMailCheckerService.isLoggedIn()) {
@@ -156,7 +156,7 @@ public class EmailListActivity extends Activity {
         }
 
         @Override
-        public void onServiceDisconnected(ComponentName name) {
+        public void onServiceDisconnected(ComponentName aComponentName) {
             Log.i(TAG, "Service is disconnected");
             mIsBound = false;
             mMailCheckerService = null;

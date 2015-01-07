@@ -23,21 +23,21 @@ public class EmailListAdapter extends ArrayAdapter<Email> {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        Email email = getItem(position);
+    public View getView(int aPosition, View aConvertView, ViewGroup aParent) {
+        Email email = getItem(aPosition);
 
-        if (convertView == null) {
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.email_row, parent, false);
+        if (aConvertView == null) {
+            aConvertView = LayoutInflater.from(getContext()).inflate(R.layout.email_row, aParent, false);
         }
 
-        TextView senderTextView = (TextView) convertView.findViewById(R.id.email_row_sender);
-        TextView sentTimeTextView = (TextView) convertView.findViewById(R.id.email_row_sent_time);
-        TextView subjectTextView = (TextView) convertView.findViewById(R.id.email_row_subject);
+        TextView senderTextView = (TextView) aConvertView.findViewById(R.id.email_row_sender);
+        TextView sentTimeTextView = (TextView) aConvertView.findViewById(R.id.email_row_sent_time);
+        TextView subjectTextView = (TextView) aConvertView.findViewById(R.id.email_row_subject);
 
         senderTextView.setText(email.getSenderEmail());
         sentTimeTextView.setText(email.getSentDate().toString());
         subjectTextView.setText(email.getSubject());
-        return convertView;
+        return aConvertView;
     }
 
 }

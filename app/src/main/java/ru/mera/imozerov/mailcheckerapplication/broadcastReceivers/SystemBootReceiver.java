@@ -15,11 +15,11 @@ public class SystemBootReceiver extends BroadcastReceiver {
     }
 
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(Context aContext, Intent aIntent) {
         if (BuildConfig.DEBUG) {
             Log.v(TAG, "Boot recieved. Starting service");
         }
         Intent myIntent = new Intent(MailCheckerService.class.getName());
-        context.startService(myIntent);
+        aContext.startService(myIntent);
     }
 }

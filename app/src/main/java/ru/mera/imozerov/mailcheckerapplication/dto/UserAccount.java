@@ -7,9 +7,9 @@ public class UserAccount {
     private final String mEmailAddress;
     private final String mPassword;
 
-    public UserAccount(String mEmailAddress, String mPassword) {
-        this.mEmailAddress = mEmailAddress;
-        this.mPassword = mPassword;
+    public UserAccount(String aEmailAddress, String aPassword) {
+        this.mEmailAddress = aEmailAddress;
+        this.mPassword = aPassword;
     }
 
     public String getEmailAddress() {

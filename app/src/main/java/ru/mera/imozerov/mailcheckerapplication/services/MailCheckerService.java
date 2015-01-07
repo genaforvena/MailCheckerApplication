@@ -33,7 +33,7 @@ public class MailCheckerService extends Service {
     public static final String PASSWORD = MailCheckerService.class.getName() + "password";
     private static final String TAG = MailCheckerService.class.getName();
     protected MailHelper mMailHelper;
-    private List<NewMailListener> mListeners = new ArrayList<>();
+    private List<NewMailListener> mListeners = new ArrayList<NewMailListener>();
     private MailCheckerApi.Stub mMailCheckerApi = new MailCheckerApiImplementation();
     private TimerTask mUpdateTask = new UpdateTask();
     private Timer mTimer;
@@ -44,15 +44,15 @@ public class MailCheckerService extends Service {
     private Object mLock = new Object();
 
     @Override
-    public IBinder onBind(Intent intent) {
+    public IBinder onBind(Intent aIntent) {
         Log.i(TAG, "binding service");
         return mMailCheckerApi;
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public int onStartCommand(Intent aIntent, int aFlags, int aStartId) {
         Log.i(TAG, "Starting service");
-        return super.onStartCommand(intent, flags, startId);
+        return super.onStartCommand(aIntent, aFlags, aStartId);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class MailCheckerService extends Service {
     }
 
     private boolean isLoggedIn() {
-        return mSharedPreferencesHelper.isLoggedIn(this);
+        return mSharedPreferencesHelper.hasCredentials(this);
     }
 
     Timer getTimer() {
@@ -82,8 +82,8 @@ public class MailCheckerService extends Service {
         this.mSharedPreferencesHelper = mSharedPreferencesHelper;
     }
 
-    void setMailHelper(MailHelper mMailHelper) {
-        this.mMailHelper = mMailHelper;
+    void setMailHelper(MailHelper aMailHelper) {
+        this.mMailHelper = aMailHelper;
     }
 
     class MailCheckerApiImplementation extends MailCheckerApi.Stub {
@@ -96,15 +96,15 @@ public class MailCheckerService extends Service {
         }
 
         @Override
-        public void login(String login, String password) throws RemoteException {
+        public void login(String aLogin, String aPassword) throws RemoteException {
             synchronized (mLock) {
-                Log.i(TAG, "Logging in to " + login);
-                if (login != null && !login.isEmpty() && password != null && !password.isEmpty()) {
-                    UserAccount userAccount = new UserAccount(login, password);
+                Log.i(TAG, "Logging in to " + aLogin);
+                if (aLogin != null && !aLogin.isEmpty() && aPassword != null && !aPassword.isEmpty()) {
+                    UserAccount userAccount = new UserAccount(aLogin, aPassword);
                     mSharedPreferencesHelper.saveUserAccount(MailCheckerService.this, userAccount);
                     scheduleTask();
                 } else {
-                    Log.e(TAG, "Check you're passing all values! Login: " + login + "; Password: " + password);
+                    Log.e(TAG, "Check you're passing all values! Login: " + aLogin + "; Password: " + aPassword);
                 }
             }
         }
@@ -138,16 +138,16 @@ public class MailCheckerService extends Service {
         }
 
         @Override
-        public void addNewMailListener(NewMailListener listener) throws RemoteException {
+        public void addNewMailListener(NewMailListener aNewMailListener) throws RemoteException {
             synchronized (mLock) {
-                mListeners.add(listener);
+                mListeners.add(aNewMailListener);
             }
         }
 
         @Override
-        public void removeNewMailListener(NewMailListener listener) throws RemoteException {
+        public void removeNewMailListener(NewMailListener aNewMailListener) throws RemoteException {
             synchronized (mLock) {
-                mListeners.remove(listener);
+                mListeners.remove(aNewMailListener);
             }
         }
     }
@@ -185,18 +185,18 @@ public class MailCheckerService extends Service {
         }
     }
 
-    private void sendNotification(List<Email> emails) {
+    private void sendNotification(List<Email> aEmails) {
         Log.i(TAG, "Sending notification");
-        if (emails != null) {
+        if (aEmails != null) {
             String notificationText;
             String notificationTitle;
-            if (emails.size() == 1) {
-                Email email = emails.get(0);
+            if (aEmails.size() == 1) {
+                Email email = aEmails.get(0);
                 notificationTitle = "You've got new email!";
                 notificationText = "Email from " + email.getSenderEmail();
             } else {
                 notificationTitle = "You've got some new emails!";
-                notificationText = emails.size() + " new emails";
+                notificationText = aEmails.size() + " new emails";
             }
             NotificationCompat.Builder builder =
                     new NotificationCompat.Builder(this)

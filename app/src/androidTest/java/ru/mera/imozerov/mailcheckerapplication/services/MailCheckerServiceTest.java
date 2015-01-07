@@ -38,7 +38,7 @@ public class MailCheckerServiceTest extends ServiceTestCase<MailCheckerService> 
         super.setUp();
         mMailCheckerService = new MailCheckerService() {
             @Override
-            void setMailHelper(MailHelper mMailHelper) {
+            void setMailHelper(MailHelper aMailHelper) {
                 this.mMailHelper = sMailHelper;
             }
         };
@@ -56,7 +56,7 @@ public class MailCheckerServiceTest extends ServiceTestCase<MailCheckerService> 
     public void testOnBind() {
         mMailCheckerService.setSharedPreferencesHelper(new SharedPreferencesHelper() {
             @Override
-            public boolean isLoggedIn(Context context) {
+            public boolean hasCredentials(Context aContext) {
                 return true;
             }
         });
@@ -70,7 +70,7 @@ public class MailCheckerServiceTest extends ServiceTestCase<MailCheckerService> 
     public void testOnCreate_notLoggedIn() {
         mMailCheckerService.setSharedPreferencesHelper(new SharedPreferencesHelper() {
             @Override
-            public boolean isLoggedIn(Context context) {
+            public boolean hasCredentials(Context aContext) {
                 return false;
             }
         });
@@ -83,12 +83,12 @@ public class MailCheckerServiceTest extends ServiceTestCase<MailCheckerService> 
     public void testOnCreate_loggedIn() {
         mMailCheckerService.setSharedPreferencesHelper(new SharedPreferencesHelper() {
             @Override
-            public boolean isLoggedIn(Context context) {
+            public boolean hasCredentials(Context aContext) {
                 return true;
             }
 
             @Override
-            public UserAccount getUserAccount(Context context) {
+            public UserAccount getUserAccount(Context aContext) {
                 return DUMMY_ACCOUNT;
             }
         });

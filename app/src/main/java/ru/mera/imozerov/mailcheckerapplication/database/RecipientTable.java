@@ -25,17 +25,17 @@ public final class RecipientTable {
 
     private static final String SQL_DELETE_RECIPIENTS_DATABASE = "DROP TABLE IF EXISTS " + TABLE_NAME;
 
-    public static void onCreate(SQLiteDatabase db) {
-            db.execSQL(SQL_CREATE_RECIPIENTS_DATABASE);
+    public static void onCreate(SQLiteDatabase aSQLiteDatabase) {
+            aSQLiteDatabase.execSQL(SQL_CREATE_RECIPIENTS_DATABASE);
     }
 
-    public static void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.i(TAG, "Upgrading db from " + oldVersion + " to " + newVersion);
-        recreateDb(db);
+    public static void onUpgrade(SQLiteDatabase aSQLiteDatabase, int aOldVersion, int aNewVersion) {
+        Log.i(TAG, "Upgrading db from " + aOldVersion + " to " + aNewVersion);
+        recreateDb(aSQLiteDatabase);
     }
 
-    public static void recreateDb(SQLiteDatabase db) {
-        db.execSQL(SQL_DELETE_RECIPIENTS_DATABASE);
-        onCreate(db);
+    public static void recreateDb(SQLiteDatabase aSQLiteDatabase) {
+        aSQLiteDatabase.execSQL(SQL_DELETE_RECIPIENTS_DATABASE);
+        onCreate(aSQLiteDatabase);
     }
 }

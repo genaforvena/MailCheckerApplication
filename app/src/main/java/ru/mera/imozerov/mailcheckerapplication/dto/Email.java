@@ -27,72 +27,72 @@ public class Email implements Parcelable {
         return mId;
     }
 
-    public void setId(long mId) {
-        this.mId = mId;
+    public void setId(long aId) {
+        mId = aId;
     }
 
     public String getSenderEmail() {
         return mSenderEmail;
     }
 
-    public void setSenderEmail(String mSender) {
-        this.mSenderEmail = mSender;
+    public void setSenderEmail(String aSenderEmail) {
+        mSenderEmail = aSenderEmail;
     }
 
     public List<String> getRecipientEmails() {
         return mRecipientEmails;
     }
 
-    public void setRecipientEmails(List<String> mRecipients) {
-        this.mRecipientEmails = mRecipients;
+    public void setRecipientEmails(List<String> aRecipientEmails) {
+        mRecipientEmails = aRecipientEmails;
     }
 
     public Date getSentDate() {
         return mSentDate;
     }
 
-    public void setSentDate(Date mSentDate) {
-        this.mSentDate = mSentDate;
+    public void setSentDate(Date aSentDate) {
+        mSentDate = aSentDate;
     }
 
     public String getSubject() {
         return mSubject;
     }
 
-    public void setSubject(String mSubject) {
-        this.mSubject = mSubject;
+    public void setSubject(String aSubject) {
+        mSubject = aSubject;
     }
 
     public String getContent() {
         return mContent;
     }
 
-    public void setContent(String mText) {
-        this.mContent = mText;
+    public void setContent(String aContent) {
+        mContent = aContent;
     }
 
     public boolean isRead() {
         return mIsRead;
     }
 
-    public void setRead(boolean mIsRead) {
-        this.mIsRead = mIsRead;
+    public void setRead(boolean aIsRead) {
+        mIsRead = aIsRead;
     }
 
-    protected Email(Parcel in) {
-        mId = in.readLong();
-        mSenderEmail = in.readString();
-        if (in.readByte() == 0x01) {
+    protected Email(Parcel aIn) {
+        mId = aIn.readLong();
+        mSenderEmail = aIn.readString();
+        if (aIn.readByte() == 0x01) {
             mRecipientEmails = new ArrayList<String>();
-            in.readList(mRecipientEmails, String.class.getClassLoader());
+            aIn.readList(mRecipientEmails, String.class.getClassLoader());
         } else {
             mRecipientEmails = null;
         }
-        long tmpMSentDate = in.readLong();
+        long tmpMSentDate = aIn.readLong();
         mSentDate = tmpMSentDate != -1 ? new Date(tmpMSentDate) : null;
-        mSubject = in.readString();
-        mContent = in.readString();
-        mIsRead = in.readByte() != 0x00;
+        mSubject = aIn.readString();
+        mContent = aIn.readString();
+        mIsRead = aIn.readByte() != 0x00;
     }
 
     @Override
@@ -101,31 +101,31 @@ public class Email implements Parcelable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeLong(mId);
-        dest.writeString(mSenderEmail);
+    public void writeToParcel(Parcel aDest, int aFlags) {
+        aDest.writeLong(mId);
+        aDest.writeString(mSenderEmail);
         if (mRecipientEmails == null) {
-            dest.writeByte((byte) (0x00));
+            aDest.writeByte((byte) (0x00));
         } else {
-            dest.writeByte((byte) (0x01));
-            dest.writeList(mRecipientEmails);
+            aDest.writeByte((byte) (0x01));
+            aDest.writeList(mRecipientEmails);
         }
-        dest.writeLong(mSentDate != null ? mSentDate.getTime() : -1L);
-        dest.writeString(mSubject);
-        dest.writeString(mContent);
-        dest.writeByte((byte) (mIsRead ? 0x01 : 0x00));
+        aDest.writeLong(mSentDate != null ? mSentDate.getTime() : -1L);
+        aDest.writeString(mSubject);
+        aDest.writeString(mContent);
+        aDest.writeByte((byte) (mIsRead ? 0x01 : 0x00));
     }
 
     @SuppressWarnings("unused")
     public static final Parcelable.Creator<Email> CREATOR = new Parcelable.Creator<Email>() {
         @Override
-        public Email createFromParcel(Parcel in) {
-            return new Email(in);
+        public Email createFromParcel(Parcel aParcel) {
+            return new Email(aParcel);
         }
 
         @Override
-        public Email[] newArray(int size) {
-            return new Email[size];
+        public Email[] newArray(int aSize) {
+            return new Email[aSize];
         }
     };
 }

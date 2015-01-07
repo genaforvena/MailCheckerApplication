@@ -43,8 +43,8 @@ public class LoginActivity extends Activity {
     SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle aSavedInstanceState) {
+        super.onCreate(aSavedInstanceState);
         setContentView(R.layout.activity_login);
 
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
@@ -112,24 +112,24 @@ public class LoginActivity extends Activity {
         }
     }
 
-    private boolean isEmailValid(String email) {
+    private boolean isEmailValid(String aEmail) {
         try {
-            InternetAddress internetAddress = new InternetAddress(email);
+            InternetAddress internetAddress = new InternetAddress(aEmail);
             internetAddress.validate();
             return true;
         } catch (AddressException e) {
-            Log.w(TAG, "Email (" + email + ") is not valid!", e);
+            Log.w(TAG, "Email (" + aEmail + ") is not valid!", e);
             return false;
         }
     }
 
-    private boolean isPasswordValid(String password) {
-        return password.length() > 4;
+    private boolean isPasswordValid(String aPassword) {
+        return aPassword.length() > 4;
     }
 
     // for testing purposes
-    void setListener(IJobListener listener) {
-        this.mListener = listener;
+    void setListener(IJobListener aJobListener) {
+        this.mListener = aJobListener;
     }
 
     private void showProgress(boolean show) {
@@ -142,13 +142,13 @@ public class LoginActivity extends Activity {
         private final String mPassword;
         private UserAccount mUserAccount;
 
-        CheckLoginTask(String email, String password) {
-            mEmail = email;
-            mPassword = password;
+        CheckLoginTask(String aEmail, String aPassword) {
+            mEmail = aEmail;
+            mPassword = aPassword;
         }
 
         @Override
-        protected Boolean doInBackground(Void... params) {
+        protected Boolean doInBackground(Void... aParams) {
             mUserAccount = new UserAccount(mEmail, mPassword);
             MailHelper mailHelper = new MailHelper(mUserAccount);
             if (mMailCheckerApplication == null) {
@@ -159,11 +159,11 @@ public class LoginActivity extends Activity {
         }
 
         @Override
-        protected void onPostExecute(Boolean success) {
+        protected void onPostExecute(Boolean aSuccess) {
             mAuthTask = null;
             showProgress(false);
 
-            if (success) {
+            if (aSuccess) {
                 mSharedPreferencesHelper.saveUserAccount(LoginActivity.this, mUserAccount);
                 finish();
                 startService(new Intent(LoginActivity.this, MailCheckerService.class));

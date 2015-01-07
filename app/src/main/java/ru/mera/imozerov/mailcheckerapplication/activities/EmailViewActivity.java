@@ -21,8 +21,8 @@ public class EmailViewActivity extends Activity {
     private Email mEmail;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle aSavedInstanceState) {
+        super.onCreate(aSavedInstanceState);
         setContentView(R.layout.activity_email_view);
 
         Intent intent = getIntent();
