@@ -83,7 +83,7 @@ public class MailCheckerServiceTest extends ServiceTestCase<MailCheckerService> 
 
         mMailCheckerService.onCreate();
 
-        assertNull(mMailCheckerService.getTimer());
+        assertFalse(mMailCheckerService.isDownloadEmailsTaskScheduled());
     }
 
     public void testOnCreate_loggedIn() {
@@ -101,6 +101,6 @@ public class MailCheckerServiceTest extends ServiceTestCase<MailCheckerService> 
 
         mMailCheckerService.onCreate();
 
-        assertNotNull(mMailCheckerService.getTimer());
+        assertTrue(mMailCheckerService.isDownloadEmailsTaskScheduled());
     }
 }

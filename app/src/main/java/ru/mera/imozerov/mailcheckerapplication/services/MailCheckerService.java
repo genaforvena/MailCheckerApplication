@@ -32,19 +32,21 @@ public class MailCheckerService extends Service {
     private static final String TAG = MailCheckerService.class.getName();
 
     public static final String INTENT_ACTION_NAME = "ru.mera.imozerov.mailcheckerapplication.action.START_MAIL_CHECKER_SERVICE";
-    public static final long DOWNLOAD_EMAIL_TASK_PERIOD = 60 * 1000L;
-    public static final long DOWNLOAD_EMAIL_TASK_DELAY = 1000L;
 
-    private List<NewMailListener> mListeners = new ArrayList<NewMailListener>();
+    private static final long DOWNLOAD_EMAIL_TASK_PERIOD = 60 * 1000L;
+    private static final long DOWNLOAD_EMAIL_TASK_DELAY = 1000L;
+
+    private List<NewMailListener> mNewMailListeners = new ArrayList<NewMailListener>();
     private MailCheckerApi.Stub mMailCheckerApi = new MailCheckerApiImplementation();
     private TimerTask mDownloadNewEmailsTask = new DownloadNewEmailsTask();
     private SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
     private EmailsDataSource mEmailsDataSource = new EmailsDataSource(this);
+    private Timer mTimer = new Timer("MailCheckerTimer");
     private Object mLock = new Object();
+    private boolean mIsDownloadEmailsTaskScheduled = false;
 
-    private MailHelper mMailHelper;
-    private Timer mTimer;
     private NotificationManager mNotificationManager;
+    private MailHelper mMailHelper;
 
     @Override
     public IBinder onBind(Intent aIntent) {
@@ -68,16 +70,26 @@ public class MailCheckerService extends Service {
     private void scheduleDownloadNewEmailsTask() {
         UserAccount userAccount = mSharedPreferencesHelper.getUserAccount(this);
         setMailHelper(new MailHelper(userAccount));
-        mTimer = new Timer("MailCheckerTimer");
         mTimer.schedule(mDownloadNewEmailsTask, DOWNLOAD_EMAIL_TASK_DELAY, DOWNLOAD_EMAIL_TASK_PERIOD);
+        mIsDownloadEmailsTaskScheduled = true;
     }
 
     private boolean hasCredentials() {
         return mSharedPreferencesHelper.hasCredentials(this);
     }
 
-    Timer getTimer() {
-        return mTimer;
+    private void notifyListeners() {
+        for (NewMailListener listener : mNewMailListeners) {
+            try {
+                listener.handleNewMail();
+            } catch (RemoteException e) {
+                Log.w(TAG, "Failed to notify listener " + listener + ".", e);
+            }
+        }
+    }
+
+    boolean isDownloadEmailsTaskScheduled() {
+        return mIsDownloadEmailsTaskScheduled;
     }
 
     void setSharedPreferencesHelper(SharedPreferencesHelper mSharedPreferencesHelper) {
@@ -86,16 +98,6 @@ public class MailCheckerService extends Service {
 
     void setMailHelper(MailHelper aMailHelper) {
         this.mMailHelper = aMailHelper;
-    }
-
-    private void notifyListeners() {
-        for (NewMailListener listener : mListeners) {
-            try {
-                listener.handleNewMail();
-            } catch (RemoteException e) {
-                Log.w(TAG, "Failed to notify listener " + listener + ".", e);
-            }
-        }
     }
 
     class MailCheckerApiImplementation extends MailCheckerApi.Stub {
@@ -116,7 +118,7 @@ public class MailCheckerService extends Service {
                     mSharedPreferencesHelper.saveUserAccount(MailCheckerService.this, userAccount);
                     scheduleDownloadNewEmailsTask();
                 } catch (EmptyCredentialsException e) {
-                    Log.e(TAG, "Some of credentials passed is empty!", e);
+                    Log.e(TAG, "Credentials passed are empty!", e);
                 }
             }
         }
@@ -127,11 +129,9 @@ public class MailCheckerService extends Service {
                 Log.i(TAG, "Logging out.");
                 mSharedPreferencesHelper.removeUserAccount(MailCheckerService.this);
                 mSharedPreferencesHelper.removeLastCheckDate(MailCheckerService.this);
-                if (mTimer != null) {
-                    mTimer.cancel();
-                    mTimer = null;
-                }
-                mListeners.clear();
+                mTimer.cancel();
+                mIsDownloadEmailsTaskScheduled = false;
+                mNewMailListeners.clear();
                 try {
                     mEmailsDataSource.open();
                     mEmailsDataSource.deleteAllEntries();
@@ -166,14 +166,14 @@ public class MailCheckerService extends Service {
                     Log.e(TAG, "Null listener is passed!");
                     return;
                 }
-                mListeners.add(aNewMailListener);
+                mNewMailListeners.add(aNewMailListener);
             }
         }
 
         @Override
         public void removeNewMailListener(NewMailListener aNewMailListener) throws RemoteException {
             synchronized (mLock) {
-                mListeners.remove(aNewMailListener);
+                mNewMailListeners.remove(aNewMailListener);
             }
         }
     }
