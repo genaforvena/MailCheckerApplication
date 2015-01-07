@@ -19,7 +19,7 @@ public class SharedPreferencesHelper {
 
     private static final String PREFS_LOGIN_USERNAME_KEY = "__USERNAME__";
     private static final String PREFS_LOGIN_PASSWORD_KEY = "__PASSWORD__";
-    private static final String PREFS_LAST_CHECK_DATE_KEY = "__LAST_CHECK_DATE__";
+    private static final String PREFS_NEXT_CHECK_DATE_KEY = "__NEXT_CHECK_DATE__";
     private static final String EMAIL_SUBJECT = "__EMAIL_SUBJECT__";
     private static final String EMAIL_SENDER_EMAIL = "__EMAIL_SENDER_EMAIL__";
     private static final String EMAIL_SENT_DATE = "__EMAIL_SENT_DATE__";
@@ -29,22 +29,22 @@ public class SharedPreferencesHelper {
         return getUserAccount(aContext) != null;
     }
 
-    public void saveLastCheckDate(Context aContext, Date aDate) {
+    public void saveNextCheckDate(Context aContext, Date aDate) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(aContext);
         final SharedPreferences.Editor editor = prefs.edit();
-        editor.putLong(PREFS_LAST_CHECK_DATE_KEY, aDate.getTime());
+        editor.putLong(PREFS_NEXT_CHECK_DATE_KEY, aDate.getTime());
         editor.commit();
     }
 
-    public Date getLastCheckDate(Context aContext) {
+    public Date getNextCheckDate(Context aContext) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(aContext);
-        return new Date(prefs.getLong(PREFS_LAST_CHECK_DATE_KEY, 0));
+        return new Date(prefs.getLong(PREFS_NEXT_CHECK_DATE_KEY, 0));
     }
 
     public void removeLastCheckDate(Context aContext) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(aContext);
         final SharedPreferences.Editor editor = prefs.edit();
-        editor.remove(PREFS_LAST_CHECK_DATE_KEY);
+        editor.remove(PREFS_NEXT_CHECK_DATE_KEY);
         editor.commit();
     }
 

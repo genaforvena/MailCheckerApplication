@@ -29,44 +29,47 @@ import ru.mera.imozerov.mailcheckerapplication.mail.MailHelper;
 import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferencesHelper;
 
 public class MailCheckerService extends Service {
-    public static final String INTENT_ACTION_NAME = "ru.mera.imozerov.mailcheckerapplication.action.START_MAIL_CHECKER_SERVICE";
     private static final String TAG = MailCheckerService.class.getName();
-    private MailHelper mMailHelper;
+
+    public static final String INTENT_ACTION_NAME = "ru.mera.imozerov.mailcheckerapplication.action.START_MAIL_CHECKER_SERVICE";
+    public static final long DOWNLOAD_EMAIL_TASK_PERIOD = 60 * 1000L;
+    public static final long DOWNLOAD_EMAIL_TASK_DELAY = 1000L;
+
     private List<NewMailListener> mListeners = new ArrayList<NewMailListener>();
     private MailCheckerApi.Stub mMailCheckerApi = new MailCheckerApiImplementation();
-    private TimerTask mUpdateTask = new DownloadNewEmailsTask();
-    private Timer mTimer;
+    private TimerTask mDownloadNewEmailsTask = new DownloadNewEmailsTask();
     private SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
     private EmailsDataSource mEmailsDataSource = new EmailsDataSource(this);
-    private NotificationManager mNotificationManager;
-
     private Object mLock = new Object();
+
+    private MailHelper mMailHelper;
+    private Timer mTimer;
+    private NotificationManager mNotificationManager;
 
     @Override
     public IBinder onBind(Intent aIntent) {
-        Log.i(TAG, "binding service");
+        Log.i(TAG, "Binding service.");
         return mMailCheckerApi;
     }
 
     @Override
     public int onStartCommand(Intent aIntent, int aFlags, int aStartId) {
-        Log.i(TAG, "Starting service");
-        return super.onStartCommand(aIntent, aFlags, aStartId);
+        Log.i(TAG, "Starting service.");
+        return START_STICKY;
     }
 
     @Override
     public void onCreate() {
-        super.onCreate();
         if (hasCredentials()) {
-            scheduleTask();
+            scheduleDownloadNewEmailsTask();
         }
     }
 
-    private void scheduleTask() {
+    private void scheduleDownloadNewEmailsTask() {
         UserAccount userAccount = mSharedPreferencesHelper.getUserAccount(this);
         setMailHelper(new MailHelper(userAccount));
         mTimer = new Timer("MailCheckerTimer");
-        mTimer.schedule(mUpdateTask, 1000L, 60 * 1000L);
+        mTimer.schedule(mDownloadNewEmailsTask, DOWNLOAD_EMAIL_TASK_DELAY, DOWNLOAD_EMAIL_TASK_PERIOD);
     }
 
     private boolean hasCredentials() {
@@ -90,7 +93,7 @@ public class MailCheckerService extends Service {
             try {
                 listener.handleNewMail();
             } catch (RemoteException e) {
-                Log.w(TAG, "Failed to notify listener " + listener, e);
+                Log.w(TAG, "Failed to notify listener " + listener + ".", e);
             }
         }
     }
@@ -104,7 +107,6 @@ public class MailCheckerService extends Service {
             }
         }
 
-        // TODO make login return boolean indicating is user able to connect to IMAP store
         @Override
         public void login(String aLogin, String aPassword) throws RemoteException {
             synchronized (mLock) {
@@ -112,7 +114,7 @@ public class MailCheckerService extends Service {
                 try {
                     UserAccount userAccount = new UserAccount(aLogin, aPassword);
                     mSharedPreferencesHelper.saveUserAccount(MailCheckerService.this, userAccount);
-                    scheduleTask();
+                    scheduleDownloadNewEmailsTask();
                 } catch (EmptyCredentialsException e) {
                     Log.e(TAG, "Some of credentials passed is empty!", e);
                 }
@@ -122,7 +124,7 @@ public class MailCheckerService extends Service {
         @Override
         public void logout() throws RemoteException {
             synchronized (mLock) {
-                Log.i(TAG, "Logging out");
+                Log.i(TAG, "Logging out.");
                 mSharedPreferencesHelper.removeUserAccount(MailCheckerService.this);
                 mSharedPreferencesHelper.removeLastCheckDate(MailCheckerService.this);
                 if (mTimer != null) {
@@ -160,6 +162,10 @@ public class MailCheckerService extends Service {
         @Override
         public void addNewMailListener(NewMailListener aNewMailListener) throws RemoteException {
             synchronized (mLock) {
+                if (aNewMailListener == null) {
+                    Log.e(TAG, "Null listener is passed!");
+                    return;
+                }
                 mListeners.add(aNewMailListener);
             }
         }
@@ -180,30 +186,33 @@ public class MailCheckerService extends Service {
         @Override
         public void run() {
             Log.i(TAG, "Checking for e-mails.");
-            if (mMailHelper != null) {
-                Date lastCheckDate = new Date();
-                mDownloadedEmails = mMailHelper.getEmailsFromInbox(mSharedPreferencesHelper.getLastCheckDate(MailCheckerService.this));
+            if (mMailHelper == null) {
+                Log.w(TAG, "MailHelper is not set. Cannot check new emails!");
+                return;
+            }
 
-                if (mDownloadedEmails.size() == 0) {
-                    Log.i(TAG, "Attempted to get emails. But there are no.");
-                    return;
-                }
+            Date nextCheckDate = new Date();
+            mDownloadedEmails = mMailHelper.getEmailsFromInbox(mSharedPreferencesHelper.getNextCheckDate(MailCheckerService.this));
+            mSharedPreferencesHelper.saveNextCheckDate(MailCheckerService.this, nextCheckDate);
 
-                Log.i(TAG, "Got " + mDownloadedEmails.size() + " emails.");
-                try {
-                    mEmailsDataSource.open();
-                    for (Email email : mDownloadedEmails) {
-                        mEmailsDataSource.saveEmail(email);
-                    }
-                    notifyListeners();
-                    sendNotification();
-                    mSharedPreferencesHelper.saveLastCheckDate(MailCheckerService.this, lastCheckDate);
-                } catch (SQLException e) {
-                    Log.e(TAG, "Unable to save emails to db!", e);
-                } finally {
-                    mEmailsDataSource.close();
-                    mDownloadedEmails = null;
+            if (mDownloadedEmails.size() == 0) {
+                Log.i(TAG, "Attempted to get emails. But there are no.");
+                return;
+            }
+
+            Log.i(TAG, "Got " + mDownloadedEmails.size() + " emails.");
+            try {
+                mEmailsDataSource.open();
+                for (Email email : mDownloadedEmails) {
+                    mEmailsDataSource.saveEmail(email);
                 }
+                notifyListeners();
+                sendNotification();
+            } catch (SQLException e) {
+                Log.e(TAG, "Unable to save emails to db!", e);
+            } finally {
+                mEmailsDataSource.close();
+                mDownloadedEmails = null;
             }
         }
 
