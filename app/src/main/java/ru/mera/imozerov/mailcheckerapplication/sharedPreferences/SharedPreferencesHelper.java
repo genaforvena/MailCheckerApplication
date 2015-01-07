@@ -55,7 +55,7 @@ public class SharedPreferencesHelper {
         try {
             return new UserAccount(login, password);
         } catch (EmptyCredentialsException e) {
-            Log.e(TAG, "User from prefs has empty credentials.", e);
+            Log.w(TAG, "User from prefs has empty credentials.", e);
             return null;
         }
     }

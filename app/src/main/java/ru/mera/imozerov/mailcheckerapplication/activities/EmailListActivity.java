@@ -55,7 +55,7 @@ public class EmailListActivity extends Activity {
         } else {
             mServiceConnection = new MailCheckerServiceConnection();
             mNewMailListener = new NewMailListener();
-            Intent intent = new Intent(MailCheckerService.INTENT_ACTION_NAME);
+            Intent intent = new Intent(this, MailCheckerService.class);
             bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
         }
 

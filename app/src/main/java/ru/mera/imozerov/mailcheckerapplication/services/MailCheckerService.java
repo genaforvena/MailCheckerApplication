@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import ru.mera.imozerov.mailcheckerapplication.BuildConfig;
 import ru.mera.imozerov.mailcheckerapplication.MailCheckerApi;
 import ru.mera.imozerov.mailcheckerapplication.NewMailListener;
 import ru.mera.imozerov.mailcheckerapplication.R;
@@ -30,10 +29,9 @@ import ru.mera.imozerov.mailcheckerapplication.mail.MailHelper;
 import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferencesHelper;
 
 public class MailCheckerService extends Service {
-    private static final String TAG = MailCheckerService.class.getName();
-
     public static final String INTENT_ACTION_NAME = "ru.mera.imozerov.mailcheckerapplication.action.START_MAIL_CHECKER_SERVICE";
-    protected MailHelper mMailHelper;
+    private static final String TAG = MailCheckerService.class.getName();
+    private MailHelper mMailHelper;
     private List<NewMailListener> mListeners = new ArrayList<NewMailListener>();
     private MailCheckerApi.Stub mMailCheckerApi = new MailCheckerApiImplementation();
     private TimerTask mUpdateTask = new DownloadNewEmailsTask();
@@ -87,6 +85,16 @@ public class MailCheckerService extends Service {
         this.mMailHelper = aMailHelper;
     }
 
+    private void notifyListeners() {
+        for (NewMailListener listener : mListeners) {
+            try {
+                listener.handleNewMail();
+            } catch (RemoteException e) {
+                Log.w(TAG, "Failed to notify listener " + listener, e);
+            }
+        }
+    }
+
     class MailCheckerApiImplementation extends MailCheckerApi.Stub {
 
         @Override
@@ -96,6 +104,7 @@ public class MailCheckerService extends Service {
             }
         }
 
+        // TODO make login return boolean indicating is user able to connect to IMAP store
         @Override
         public void login(String aLogin, String aPassword) throws RemoteException {
             synchronized (mLock) {
@@ -116,16 +125,26 @@ public class MailCheckerService extends Service {
                 Log.i(TAG, "Logging out");
                 mSharedPreferencesHelper.removeUserAccount(MailCheckerService.this);
                 mSharedPreferencesHelper.removeLastCheckDate(MailCheckerService.this);
-                mEmailsDataSource.deleteAllEntries();
-                mTimer = null;
+                if (mTimer != null) {
+                    mTimer.cancel();
+                    mTimer = null;
+                }
                 mListeners.clear();
+                try {
+                    mEmailsDataSource.open();
+                    mEmailsDataSource.deleteAllEntries();
+                } catch (SQLException e) {
+                    Log.e(TAG, "Unable to delete all db entries!", e);
+                } finally {
+                    mEmailsDataSource.close();
+                }
             }
         }
 
         @Override
         public List<Email> getAllEmails() throws RemoteException {
             synchronized (mLock) {
-                Log.i(TAG, "Getting all emails");
+                Log.i(TAG, "Getting all emails.");
                 try {
                     mEmailsDataSource.open();
                     return mEmailsDataSource.getAllEmails();
@@ -154,76 +173,57 @@ public class MailCheckerService extends Service {
     }
 
     class DownloadNewEmailsTask extends TimerTask {
+        private static final int NOTIFICATION_ID = 12345;
+
+        private List<Email> mDownloadedEmails;
+
         @Override
         public void run() {
             Log.i(TAG, "Checking for e-mails.");
             if (mMailHelper != null) {
                 Date lastCheckDate = new Date();
-                List<Email> emails = mMailHelper.getEmailsFromInbox(mSharedPreferencesHelper.getLastCheckDate(MailCheckerService.this));
-                if (BuildConfig.DEBUG) {
-                    if (emails != null) {
-                        Log.d(TAG, "Got " + emails.size() + " emails");
-                    } else {
-                        Log.d(TAG, "Attempted to get emails. But there are no");
-                    }
+                mDownloadedEmails = mMailHelper.getEmailsFromInbox(mSharedPreferencesHelper.getLastCheckDate(MailCheckerService.this));
+
+                if (mDownloadedEmails.size() == 0) {
+                    Log.i(TAG, "Attempted to get emails. But there are no.");
+                    return;
                 }
-                if (emails != null) {
-                    try {
-                        mEmailsDataSource.open();
-                        for (Email email : emails) {
-                            mEmailsDataSource.saveEmail(email);
-                        }
-                        notifyListeners();
-                        sendNotification(emails);
-                        mSharedPreferencesHelper.saveLastCheckDate(MailCheckerService.this, lastCheckDate);
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    } finally {
-                        mEmailsDataSource.close();
+
+                Log.i(TAG, "Got " + mDownloadedEmails.size() + " emails.");
+                try {
+                    mEmailsDataSource.open();
+                    for (Email email : mDownloadedEmails) {
+                        mEmailsDataSource.saveEmail(email);
                     }
+                    notifyListeners();
+                    sendNotification();
+                    mSharedPreferencesHelper.saveLastCheckDate(MailCheckerService.this, lastCheckDate);
+                } catch (SQLException e) {
+                    Log.e(TAG, "Unable to save emails to db!", e);
+                } finally {
+                    mEmailsDataSource.close();
+                    mDownloadedEmails = null;
                 }
             }
         }
-    }
 
-    private void sendNotification(List<Email> aEmails) {
-        Log.i(TAG, "Sending notification");
-        if (aEmails != null) {
-            String notificationText;
-            String notificationTitle;
-            if (aEmails.size() == 1) {
-                Email email = aEmails.get(0);
-                notificationTitle = "You've got new email!";
-                notificationText = "Email from " + email.getSenderEmail();
-            } else {
-                notificationTitle = "You've got some new emails!";
-                notificationText = aEmails.size() + " new emails";
-            }
+        private void sendNotification() {
+            Log.i(TAG, "Sending notification");
+            String notificationTitle = getResources().getQuantityString(R.plurals.numberOfEmailsReceivedNotificationTitle, mDownloadedEmails.size(), mDownloadedEmails.size());
+
             NotificationCompat.Builder builder =
-                    new NotificationCompat.Builder(this)
+                    new NotificationCompat.Builder(MailCheckerService.this)
                             .setSmallIcon(R.drawable.ic_launcher)
                             .setContentTitle(notificationTitle)
-                            .setAutoCancel(true)
-                            .setContentText(notificationText);
-            int NOTIFICATION_ID = 12345;
+                            .setAutoCancel(true);
 
-            Intent targetIntent = new Intent(this, EmailListActivity.class);
-            PendingIntent contentIntent = PendingIntent.getActivity(this, 0, targetIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            Intent targetIntent = new Intent(MailCheckerService.this, EmailListActivity.class);
+            PendingIntent contentIntent = PendingIntent.getActivity(MailCheckerService.this, 0, targetIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             builder.setContentIntent(contentIntent);
             if (mNotificationManager == null) {
                 mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             }
             mNotificationManager.notify(NOTIFICATION_ID, builder.build());
-        }
-    }
-
-    private void notifyListeners() {
-        for (NewMailListener listener : mListeners) {
-            try {
-                listener.handleNewMail();
-            } catch (RemoteException e) {
-                Log.w(TAG, "Failed to notify listener " + listener, e);
-            }
         }
     }
 }

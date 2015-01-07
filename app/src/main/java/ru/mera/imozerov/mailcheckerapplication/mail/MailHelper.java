@@ -66,6 +66,13 @@ public class MailHelper {
             SearchTerm newerThan = new ReceivedDateTerm(ComparisonTerm.GT, aStartDate);
             Message[] msgs = inbox.search(newerThan);
 
+            if (msgs == null) {
+                Log.i(TAG, "There are no new emails in the inbox.");
+                return emailListResult;
+            }
+
+            Log.i(TAG, "Got " + msgs.length + " emails from inbox.");
+
             for (Message msg : msgs) {
                 Email email = new Email();
 

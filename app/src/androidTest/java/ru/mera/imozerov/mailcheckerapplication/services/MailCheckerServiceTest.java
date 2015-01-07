@@ -6,6 +6,7 @@ import android.os.IBinder;
 import android.test.ServiceTestCase;
 
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
+import ru.mera.imozerov.mailcheckerapplication.exceptions.EmptyCredentialsException;
 import ru.mera.imozerov.mailcheckerapplication.mail.MailHelper;
 import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferencesHelper;
 
@@ -13,7 +14,16 @@ import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferenc
  * Created by imozerov on 22.12.2014.
  */
 public class MailCheckerServiceTest extends ServiceTestCase<MailCheckerService> {
-    public static final UserAccount DUMMY_ACCOUNT = new UserAccount("dummy@gmail.com", "dummy_pass");
+    public static UserAccount DUMMY_ACCOUNT;
+
+    static {
+        try {
+            DUMMY_ACCOUNT = new UserAccount("dummy@gmail.com", "dummy_pass");
+        } catch (EmptyCredentialsException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static MailHelper sMailHelper = new MailHelper(DUMMY_ACCOUNT) {
         @Override
         public boolean isAbleToLogin() {
@@ -36,12 +46,8 @@ public class MailCheckerServiceTest extends ServiceTestCase<MailCheckerService> 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        mMailCheckerService = new MailCheckerService() {
-            @Override
-            void setMailHelper(MailHelper aMailHelper) {
-                this.mMailHelper = sMailHelper;
-            }
-        };
+        mMailCheckerService = new MailCheckerService();
+        mMailCheckerService.setMailHelper(sMailHelper);
     }
 
     public void testPreconditions() {

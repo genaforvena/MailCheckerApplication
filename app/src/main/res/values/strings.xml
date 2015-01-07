@@ -10,5 +10,9 @@
     <string name="email_view_subject_title">Subject:</string>
     <string name="email_view_sent_time_title">Sent date:</string>
     <string name="email_view_sender_title">Sender:</string>
+    <plurals name="numberOfEmailsReceivedNotificationTitle">
+        <item quantity="one">"You've got %d new email!"</item>
+        <item quantity="other">"You've got %d new emails!"</item>
+    </plurals>
 
 </resources>
