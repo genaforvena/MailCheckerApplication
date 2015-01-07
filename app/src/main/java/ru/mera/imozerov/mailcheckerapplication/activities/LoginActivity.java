@@ -166,7 +166,7 @@ public class LoginActivity extends Activity {
             if (aSuccess) {
                 mSharedPreferencesHelper.saveUserAccount(LoginActivity.this, mUserAccount);
                 finish();
-                startService(new Intent(LoginActivity.this, MailCheckerService.class));
+                startService(new Intent(MailCheckerService.INTENT_ACTION_NAME));
                 startActivity(new Intent(LoginActivity.this, EmailListActivity.class));
             } else {
                 mUserAccount = null;

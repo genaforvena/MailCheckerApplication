@@ -19,7 +19,7 @@ public class SystemBootReceiver extends BroadcastReceiver {
         if (BuildConfig.DEBUG) {
             Log.v(TAG, "Boot recieved. Starting service");
         }
-        Intent myIntent = new Intent(MailCheckerService.class.getName());
+        Intent myIntent = new Intent(MailCheckerService.INTENT_ACTION_NAME);
         aContext.startService(myIntent);
     }
 }

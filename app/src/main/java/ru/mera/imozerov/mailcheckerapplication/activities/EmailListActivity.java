@@ -55,11 +55,11 @@ public class EmailListActivity extends Activity {
         } else {
             mServiceConnection = new MailCheckerServiceConnection();
             mNewMailListener = new NewMailListener();
-            Intent intent = new Intent(this, MailCheckerService.class);
+            Intent intent = new Intent(MailCheckerService.INTENT_ACTION_NAME);
             bindService(intent, mServiceConnection, BIND_AUTO_CREATE);
         }
 
-        mEmails = new ArrayList<>();
+        mEmails = new ArrayList<Email>();
 
         mEmailListView = (ListView) findViewById(R.id.email_list_view);
         mEmailListAdapter = new EmailListAdapter(this, R.layout.email_row, mEmails);
@@ -145,7 +145,7 @@ public class EmailListActivity extends Activity {
             mMailCheckerService = MailCheckerApi.Stub.asInterface(aService);
             try {
                 mMailCheckerService.addNewMailListener(mNewMailListener);
-                if (!mMailCheckerService.isLoggedIn()) {
+                if (!mMailCheckerService.hasCredentials()) {
                     mMailCheckerService.login(mUserAccount.getEmailAddress(), mUserAccount.getPassword());
                 } else {
                     updateListView();

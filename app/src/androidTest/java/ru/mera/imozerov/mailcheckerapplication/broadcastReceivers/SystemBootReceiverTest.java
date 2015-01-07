@@ -8,8 +8,6 @@ import android.test.mock.MockContext;
 import java.util.ArrayList;
 import java.util.List;
 
-import ru.mera.imozerov.mailcheckerapplication.services.MailCheckerService;
-
 /**
  * Created by imozerov on 18.12.2014.
  */
@@ -34,7 +32,6 @@ public class SystemBootReceiverTest extends AndroidTestCase {
         Intent intent = new Intent(Intent.ACTION_BOOT_COMPLETED);
         mSystemBootReceiver.onReceive(mContext, intent);
         assertEquals(1, mContext.getStartedIntents().size());
-        assertEquals(MailCheckerService.class.getName(), mContext.getStartedIntents().get(0).getAction());
     }
 
     class TestContext extends MockContext

@@ -21,8 +21,7 @@
 
         <receiver
             android:name=".broadcastReceivers.SystemBootReceiver"
-            android:enabled="true"
-            android:exported="false">
+            android:enabled="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
@@ -31,10 +30,10 @@
         <service
             android:name=".services.MailCheckerService"
             android:enabled="true"
-            android:exported="true"
+            android:exported="false"
             android:process=":remote">
             <intent-filter>
-                <action android:name="ru.mera.imozerov.mailcheckerapplication.services.MailCheckerService" />
+                <action android:name="ru.mera.imozerov.mailcheckerapplication.action.START_MAIL_CHECKER_SERVICE" />
             </intent-filter>
         </service>
 

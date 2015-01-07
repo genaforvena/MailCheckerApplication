@@ -29,9 +29,9 @@ import ru.mera.imozerov.mailcheckerapplication.mail.MailHelper;
 import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferencesHelper;
 
 public class MailCheckerService extends Service {
-    public static final String LOGIN = MailCheckerService.class.getName() + "attemptLogin";
-    public static final String PASSWORD = MailCheckerService.class.getName() + "password";
     private static final String TAG = MailCheckerService.class.getName();
+
+    public static final String INTENT_ACTION_NAME = "ru.mera.imozerov.mailcheckerapplication.action.START_MAIL_CHECKER_SERVICE";
     protected MailHelper mMailHelper;
     private List<NewMailListener> mListeners = new ArrayList<NewMailListener>();
     private MailCheckerApi.Stub mMailCheckerApi = new MailCheckerApiImplementation();
@@ -58,7 +58,7 @@ public class MailCheckerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (isLoggedIn()) {
+        if (hasCredentials()) {
             scheduleTask();
         }
     }
@@ -70,7 +70,7 @@ public class MailCheckerService extends Service {
         mTimer.schedule(mUpdateTask, 1000L, 60 * 1000L);
     }
 
-    private boolean isLoggedIn() {
+    private boolean hasCredentials() {
         return mSharedPreferencesHelper.hasCredentials(this);
     }
 
@@ -89,9 +89,9 @@ public class MailCheckerService extends Service {
     class MailCheckerApiImplementation extends MailCheckerApi.Stub {
 
         @Override
-        public boolean isLoggedIn() throws RemoteException {
+        public boolean hasCredentials() throws RemoteException {
             synchronized (mLock) {
-                return MailCheckerService.this.isLoggedIn();
+                return MailCheckerService.this.hasCredentials();
             }
         }
 

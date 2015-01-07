@@ -49,7 +49,7 @@ public class MailCheckerServiceTest extends ServiceTestCase<MailCheckerService> 
     }
 
     public void testStartable() {
-        Intent intent = new Intent(MailCheckerService.class.getName());
+        Intent intent = new Intent(MailCheckerService.INTENT_ACTION_NAME);
         startService(intent);
     }
 
@@ -61,7 +61,7 @@ public class MailCheckerServiceTest extends ServiceTestCase<MailCheckerService> 
             }
         });
 
-        Intent intent = new Intent(MailCheckerService.class.getName());
+        Intent intent = new Intent(MailCheckerService.INTENT_ACTION_NAME);
         IBinder binder = mMailCheckerService.onBind(intent);
 
         assertEquals(MailCheckerService.MailCheckerApiImplementation.class, binder.getClass());
