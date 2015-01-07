@@ -21,6 +21,7 @@ import javax.mail.internet.InternetAddress;
 import ru.mera.imozerov.mailcheckerapplication.MailCheckerApplication;
 import ru.mera.imozerov.mailcheckerapplication.R;
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
+import ru.mera.imozerov.mailcheckerapplication.exceptions.EmptyCredentialsException;
 import ru.mera.imozerov.mailcheckerapplication.jobs.IJobListener;
 import ru.mera.imozerov.mailcheckerapplication.mail.MailHelper;
 import ru.mera.imozerov.mailcheckerapplication.services.MailCheckerService;
@@ -28,19 +29,15 @@ import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferenc
 
 public class LoginActivity extends Activity {
     private static final String TAG = LoginActivity.class.getName();
-
+    MailCheckerApplication mMailCheckerApplication;
+    SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
     private CheckLoginTask mAuthTask = null;
-
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
     private Button mEmailSignInButton;
-    MailCheckerApplication mMailCheckerApplication;
-
     private IJobListener mListener;
-
-    SharedPreferencesHelper mSharedPreferencesHelper = new SharedPreferencesHelper();
 
     @Override
     protected void onCreate(Bundle aSavedInstanceState) {
@@ -133,8 +130,8 @@ public class LoginActivity extends Activity {
     }
 
     private void showProgress(boolean show) {
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+        mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+        mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
     }
 
     private class CheckLoginTask extends AsyncTask<Void, Void, Boolean> {
@@ -149,13 +146,19 @@ public class LoginActivity extends Activity {
 
         @Override
         protected Boolean doInBackground(Void... aParams) {
-            mUserAccount = new UserAccount(mEmail, mPassword);
-            MailHelper mailHelper = new MailHelper(mUserAccount);
-            if (mMailCheckerApplication == null) {
-                mMailCheckerApplication = ((MailCheckerApplication) getApplication());
+            try {
+                mUserAccount = new UserAccount(mEmail, mPassword);
+
+                MailHelper mailHelper = new MailHelper(mUserAccount);
+                if (mMailCheckerApplication == null) {
+                    mMailCheckerApplication = ((MailCheckerApplication) getApplication());
+                }
+                mMailCheckerApplication.setMailHelper(mailHelper);
+                return mMailCheckerApplication.getMailHelper().isAbleToLogin();
+            } catch (EmptyCredentialsException e) {
+                Log.e(TAG, "Empty credentials passed!", e);
+                return false;
             }
-            mMailCheckerApplication.setMailHelper(mailHelper);
-            return mMailCheckerApplication.getMailHelper().isAbleToLogin();
         }
 
         @Override

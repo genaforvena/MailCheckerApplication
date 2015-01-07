@@ -3,11 +3,13 @@ package ru.mera.imozerov.mailcheckerapplication.sharedPreferences;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import java.util.Date;
 
 import ru.mera.imozerov.mailcheckerapplication.dto.Email;
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
+import ru.mera.imozerov.mailcheckerapplication.exceptions.EmptyCredentialsException;
 
 /**
  * Created by imozerov on 24.12.2014.
@@ -40,74 +42,58 @@ public class SharedPreferencesHelper {
     }
 
     public void removeLastCheckDate(Context aContext) {
-        removeFromPrefs(aContext, PREFS_LAST_CHECK_DATE_KEY);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(aContext);
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.remove(PREFS_LAST_CHECK_DATE_KEY);
+        editor.commit();
     }
 
     public UserAccount getUserAccount(Context aContext) {
-        String login = getFromPrefs(aContext, PREFS_LOGIN_USERNAME_KEY, null);
-        String password = getFromPrefs(aContext, PREFS_LOGIN_PASSWORD_KEY, null);
-        if (login != null && password != null) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(aContext);
+        String login = prefs.getString(PREFS_LOGIN_USERNAME_KEY, null);
+        String password = prefs.getString(PREFS_LOGIN_PASSWORD_KEY, null);
+        try {
             return new UserAccount(login, password);
+        } catch (EmptyCredentialsException e) {
+            Log.e(TAG, "User from prefs has empty credentials.", e);
+            return null;
         }
-        return null;
     }
 
     public void saveUserAccount(Context aContext, UserAccount aUserAccount) {
-        saveToPrefs(aContext, PREFS_LOGIN_USERNAME_KEY, aUserAccount.getEmailAddress());
-        saveToPrefs(aContext, PREFS_LOGIN_PASSWORD_KEY, aUserAccount.getPassword());
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(aContext);
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(PREFS_LOGIN_USERNAME_KEY, aUserAccount.getEmailAddress());
+        editor.putString(PREFS_LOGIN_PASSWORD_KEY, aUserAccount.getPassword());
+        editor.commit();
     }
 
     public void removeUserAccount(Context aContext) {
-        removeFromPrefs(aContext, PREFS_LOGIN_PASSWORD_KEY);
-        removeFromPrefs(aContext, PREFS_LOGIN_USERNAME_KEY);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(aContext);
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.remove(PREFS_LOGIN_PASSWORD_KEY);
+        editor.remove(PREFS_LOGIN_USERNAME_KEY);
+        editor.commit();
     }
 
     public void saveLastSeenEmail(Context aContext, Email aEmail) {
-        saveToPrefs(aContext, EMAIL_SUBJECT, aEmail.getSubject());
-        saveToPrefs(aContext, EMAIL_SENDER_EMAIL, aEmail.getSenderEmail());
-        saveToPrefs(aContext, EMAIL_SENT_DATE, aEmail.getSentDate().getTime());
-        saveToPrefs(aContext, EMAIL_CONTENT, aEmail.getContent());
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(aContext);
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(EMAIL_SUBJECT, aEmail.getSubject());
+        editor.putString(EMAIL_SENDER_EMAIL, aEmail.getSenderEmail());
+        editor.putLong(EMAIL_SENT_DATE, aEmail.getSentDate().getTime());
+        editor.putString(EMAIL_CONTENT, aEmail.getContent());
+        editor.commit();
     }
 
     public Email getLastSeenEmail(Context aContext) {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(aContext);
         Email email = new Email();
-        email.setSenderEmail(getFromPrefs(aContext, EMAIL_SENDER_EMAIL, ""));
-        email.setSubject(getFromPrefs(aContext, EMAIL_SUBJECT, ""));
-        email.setSentDate(new Date(getFromPrefs(aContext, EMAIL_SENT_DATE, 0)));
-        email.setContent(getFromPrefs(aContext, EMAIL_CONTENT, ""));
+        email.setSenderEmail(sharedPrefs.getString(EMAIL_SENDER_EMAIL, ""));
+        email.setSubject(sharedPrefs.getString(EMAIL_SUBJECT, ""));
+        email.setSentDate(new Date(sharedPrefs.getLong(EMAIL_SENT_DATE, 0)));
+        email.setContent(sharedPrefs.getString(EMAIL_CONTENT, ""));
         return email;
-    }
-
-    private void saveToPrefs(Context aContext, String aKey, String aValue) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(aContext);
-        final SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(aKey, aValue);
-        editor.commit();
-    }
-
-    private void saveToPrefs(Context aContext, String aKey, long aValue) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(aContext);
-        final SharedPreferences.Editor editor = prefs.edit();
-        editor.putLong(aKey, aValue);
-        editor.commit();
-    }
-
-    private String getFromPrefs(Context aContext, String aKey, String aDefaultValue) {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(aContext);
-        return sharedPrefs.getString(aKey, aDefaultValue);
-    }
-
-
-    private long getFromPrefs(Context aContext, String aKey, long aDefaultValue) {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(aContext);
-        return sharedPrefs.getLong(aKey, aDefaultValue);
-    }
-
-    private void removeFromPrefs(Context aContext, String aKey) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(aContext);
-        final SharedPreferences.Editor editor = prefs.edit();
-        editor.remove(aKey);
-        editor.commit();
     }
 }
 

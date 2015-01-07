@@ -25,6 +25,7 @@ import ru.mera.imozerov.mailcheckerapplication.activities.EmailListActivity;
 import ru.mera.imozerov.mailcheckerapplication.database.EmailsDataSource;
 import ru.mera.imozerov.mailcheckerapplication.dto.Email;
 import ru.mera.imozerov.mailcheckerapplication.dto.UserAccount;
+import ru.mera.imozerov.mailcheckerapplication.exceptions.EmptyCredentialsException;
 import ru.mera.imozerov.mailcheckerapplication.mail.MailHelper;
 import ru.mera.imozerov.mailcheckerapplication.sharedPreferences.SharedPreferencesHelper;
 
@@ -99,12 +100,12 @@ public class MailCheckerService extends Service {
         public void login(String aLogin, String aPassword) throws RemoteException {
             synchronized (mLock) {
                 Log.i(TAG, "Logging in to " + aLogin);
-                if (aLogin != null && !aLogin.isEmpty() && aPassword != null && !aPassword.isEmpty()) {
+                try {
                     UserAccount userAccount = new UserAccount(aLogin, aPassword);
                     mSharedPreferencesHelper.saveUserAccount(MailCheckerService.this, userAccount);
                     scheduleTask();
-                } else {
-                    Log.e(TAG, "Check you're passing all values! Login: " + aLogin + "; Password: " + aPassword);
+                } catch (EmptyCredentialsException e) {
+                    Log.e(TAG, "Some of credentials passed is empty!", e);
                 }
             }
         }
